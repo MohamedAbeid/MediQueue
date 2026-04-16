@@ -1,3 +1,7 @@
+using MediQueue.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer;
 namespace MediQueue
 {
     public class Program
@@ -8,9 +12,22 @@ namespace MediQueue
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
-
+            // Configure Entity Framework and SQL Server
+            builder.Services.AddDbContext<MediQueueContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             var app = builder.Build();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+                DbInitializer.SeedRoles(roleManager).Wait();
+
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+                DbInitializer.SeedAdmin(userManager).Wait();
+            }
+
+            
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
