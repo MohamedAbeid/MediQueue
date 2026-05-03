@@ -1,0 +1,68 @@
+@model MediQueue.ViewModel.UserVM
+
+@{
+    ViewData["Title"] = "Edit User";
+    var clinics = ViewData["Clinics"] as IEnumerable<MediQueue.Models.Clinic> ?? new List<MediQueue.Models.Clinic>();
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h1>Edit User</h1>
+            <hr />
+
+            <form asp-action="Edit" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <input type="hidden" asp-for="Id" />
+
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" type="email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Specialty" class="form-label"></label>
+                    <input asp-for="Specialty" class="form-control" placeholder="e.g., Cardiology, Dermatology" />
+                    <span asp-validation-for="Specialty" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ClinicID" class="form-label">Clinic</label>
+                    <select asp-for="ClinicID" class="form-control" asp-items="@(new SelectList(clinics, "ClinicID", "Name"))">
+                        <option value="">-- Select Clinic --</option>
+                    </select>
+                    <span asp-validation-for="ClinicID" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Update
+                    </button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -30,7 +30,9 @@ namespace MediQueue.Models
                 {
                     UserName = adminEmail,
                     Email = adminEmail,
-                    FullName = "MohamedAbeid"
+                    FullName = "MohamedAbeid",
+                    PhoneNumber = "01000000000"
+
                 };
 
                 await userManager.CreateAsync(admin, "MohamedAbeid");

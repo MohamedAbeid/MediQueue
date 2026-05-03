@@ -1,4 +1,5 @@
 using MediQueue.Models;
+using MediQueue.BL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.SqlServer;
@@ -15,6 +16,25 @@ namespace MediQueue
             // Configure Entity Framework and SQL Server
             builder.Services.AddDbContext<MediQueueContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // Register Identity (required for RoleManager / UserManager)
+            builder.Services.AddIdentity<User, IdentityRole>(options =>
+            {
+                // Adjust password / user settings as needed
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 6;
+            })
+            .AddEntityFrameworkStores<MediQueueContext>()
+            .AddDefaultTokenProviders();
+            
+            // Register Business Logic Services
+            builder.Services.AddScoped<IClinicService, ClinicService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            builder.Services.AddScoped<IQueueService, QueueService>();
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
