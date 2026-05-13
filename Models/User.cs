@@ -16,6 +16,7 @@ namespace MediQueue.Models
         public ICollection<Appointment> PatientAppointments { get; set; }
         public ICollection<Appointment> DoctorAppointments { get; set; }
 
+        public string? ProfileImagePath { get; set; }
 
     }
 }

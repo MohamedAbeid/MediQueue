@@ -7,28 +7,28 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-6 offset-md-3">
-            <h2 class="text-danger">Delete Clinic</h2>
+            <h2 class="text-danger">حذف العيادة</h2>
             <hr />
             <p class="alert alert-warning">
-                <strong>Warning!</strong> Are you sure you want to delete this clinic?
+                <strong>تحذير!</strong> هل أنت متأكد أنك تريد حذف هذه العيادة؟ هذا الإجراء لا يمكن التراجع عنه.
             </p>
 
             <div class="card">
                 <div class="card-body">
                     <div class="row mb-3">
-                        <div class="col-md-4"><strong>ID:</strong></div>
+                        <div class="col-md-4"><strong>بطاقة تعريف</strong></div>
                         <div class="col-md-8">@Model.ClinicID</div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-4"><strong>Name:</strong></div>
+                        <div class="col-md-4"><strong>الاسم</strong></div>
                         <div class="col-md-8">@Model.Name</div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-4"><strong>Address:</strong></div>
+                        <div class="col-md-4"><strong>العنوان</strong></div>
                         <div class="col-md-8">@Model.Address</div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-4"><strong>Phone:</strong></div>
+                        <div class="col-md-4"><strong>الهاتف</strong></div>
                         <div class="col-md-8">@Model.PhoneNumber</div>
                     </div>
                 </div>
@@ -37,10 +37,10 @@
             <form asp-action="Delete" method="post" class="mt-4">
                 <input type="hidden" asp-for="ClinicID" />
                 <button type="submit" class="btn btn-danger">
-                    <i class="bi bi-trash"></i> Delete
+                    <i class="bi bi-trash"></i> حذف
                 </button>
                 <a asp-action="Details" asp-route-id="@Model.ClinicID" class="btn btn-secondary">
-                    <i class="bi bi-x-circle"></i> Cancel
+                    <i class="bi bi-x-circle"></i> إلغاء
                 </a>
             </form>
         </div>

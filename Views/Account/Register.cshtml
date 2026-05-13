@@ -1,0 +1,122 @@
+﻿@model MediQueue.ViewModel.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="~/css/mediqueue.css" asp-append-version="true" />
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إنشاء حساب | Medi Queue</title>
+    <link rel="stylesheet" href="~/css/mediqueue.css" />
+    <style>
+            body {
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 1.5rem;
+                position: relative;
+                overflow-x: hidden;
+            }
+
+            .auth-card {
+                width: 100%;
+                max-width: 460px;
+                padding: 2rem;
+                position: relative;
+                z-index: 1;
+                background: color-mix(in srgb, var(--surface) 92%, transparent);
+                backdrop-filter: blur(12px);
+                border: 1px solid var(--border);
+                box-shadow: var(--shadow-lg);
+                border-radius: var(--radius-lg);
+                animation: fadeIn 0.55s ease;
+            }
+
+            .auth-logo {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                font-size: 1.55rem;
+                font-weight: 800;
+                color: var(--primary);
+                margin-block-end: 0.35rem;
+            }
+
+            .auth-hint {
+                font-size: 0.9rem;
+                color: var(--text-muted);
+                text-align: center;
+                margin-block-end: 1.25rem;
+            }
+    </style>
+</head>
+<body>
+    <div id="particles-container"></div>
+
+    <div class="auth-card">
+        <div class="auth-logo">
+            <span class="logo-mark" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
+            </span>
+            إنشاء حساب
+        </div>
+        <p class="auth-hint">أكمل البيانات لإنشاء حساب مريض جديد.</p>
+
+        <form asp-action="Register" method="post">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <div asp-validation-summary="All" class="text-danger mb-0"></div>
+                </div>
+            }
+
+            <div class="form-group">
+                <label class="form-label" asp-for="FullName">الاسم الكامل</label>
+                <input class="form-input" asp-for="FullName" placeholder="مثال: أحمد علي" />
+                <span asp-validation-for="FullName" class="form-error"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label" asp-for="Email">البريد الإلكتروني</label>
+                <input class="form-input" asp-for="Email" placeholder="you@example.com" />
+                <span asp-validation-for="Email" class="form-error"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label" asp-for="PhoneNumber">رقم الهاتف</label>
+                <input class="form-input" asp-for="PhoneNumber" placeholder="مثال: 0123456789" />
+                <span asp-validation-for="PhoneNumber" class="form-error"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label" asp-for="Password">كلمة المرور</label>
+                <input class="form-input" asp-for="Password" placeholder="ستة أحرف على الأقل" />
+                <span asp-validation-for="Password" class="form-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" asp-for="PasswordConfirm">تأكيد كلمة المرور</label>
+                <input class="form-input" asp-for="PasswordConfirm" placeholder="ستة أحرف على الأقل" />
+                <span asp-validation-for="PasswordConfirm" class="form-error"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">إنشاء الحساب</button>
+        </form>
+
+        <p class="text-center text-secondary" style="margin-top: 1.25rem; font-size: 0.9rem">
+            لديك حساب بالفعل؟
+            <a asp-action="Login" style="color: var(--primary); font-weight: 800">تسجيل الدخول</a>
+        </p>
+    </div>
+
+    <script src="~/js/particles.js"></script>
+    <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var isDark = localStorage.getItem('mq_darkMode') === '1';
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                }
+            });
+    </script>
+</body>

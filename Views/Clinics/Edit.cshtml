@@ -4,44 +4,52 @@
     ViewData["Title"] = "Edit Clinic";
 }
 
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <h1>Edit Clinic</h1>
-            <hr />
+        <div class="col-lg-5 mx-auto">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h1 class="card-title fw-bold mb-2 text-primary">
+                        <i class="bi bi-pencil-square"></i> تعديل العيادة
+                    </h1>
+                    <hr class="mb-4" />
 
-            <form asp-action="Edit" method="post">
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>الرجاء تصحيح الأخطاء التالية:</strong>
+                        </div>
 
-                <input type="hidden" asp-for="ClinicID" />
+                        <input type="hidden" asp-for="ClinicID" />
 
-                <div class="mb-3">
-                    <label asp-for="Name" class="form-label"></label>
-                    <input asp-for="Name" class="form-control" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="mb-4">
+                            <label asp-for="Name" class="form-label fw-semibold text-dark">اسم العيادة</label>
+                            <input asp-for="Name" class="form-control form-control-lg rounded-3" placeholder="أدخل اسم العيادة" />
+                            <span asp-validation-for="Name" class="text-danger small d-block mt-2"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Address" class="form-label fw-semibold text-dark">عنوان العيادة</label>
+                            <input asp-for="Address" class="form-control form-control-lg rounded-3" placeholder="ادخل عنوان العيادة" />
+                            <span asp-validation-for="Address" class="text-danger small d-block mt-2"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold text-dark">رقم الهاتف</label>
+                            <input asp-for="PhoneNumber" class="form-control form-control-lg rounded-3" placeholder="ادخل رقم الهاتف" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small d-block mt-2"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-between pt-3">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
+                                <i class="bi bi-check-circle me-2"></i>تحديث العيادة
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg rounded-3 fw-semibold">
+                                <i class="bi bi-x-circle me-2"></i>إلغاء
+                            </a>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="mb-3">
-                    <label asp-for="Address" class="form-label"></label>
-                    <input asp-for="Address" class="form-control" />
-                    <span asp-validation-for="Address" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="PhoneNumber" class="form-label"></label>
-                    <input asp-for="PhoneNumber" class="form-control" />
-                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Update
-                    </button>
-                    <a asp-action="Details" asp-route-id="@Model.ClinicID" class="btn btn-secondary">
-                        <i class="bi bi-x-circle"></i> Cancel
-                    </a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

@@ -1,6 +1,7 @@
 using MediQueue.BL;
 using MediQueue.Models;
 using MediQueue.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediQueue.Controllers
@@ -50,13 +51,14 @@ namespace MediQueue.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View(new ClinicVM());
         }
-
+        
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromForm] ClinicVM clinicVM)
         {
@@ -85,7 +87,7 @@ namespace MediQueue.Controllers
                 return View(clinicVM);
             }
         }
-
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -116,6 +118,7 @@ namespace MediQueue.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [FromForm] ClinicVM clinicVM)
         {
@@ -154,7 +157,7 @@ namespace MediQueue.Controllers
                 return View(clinicVM);
             }
         }
-
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -177,6 +180,7 @@ namespace MediQueue.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try

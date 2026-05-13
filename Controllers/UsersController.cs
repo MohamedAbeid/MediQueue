@@ -1,6 +1,7 @@
 using MediQueue.BL;
 using MediQueue.Models;
 using MediQueue.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediQueue.Controllers
@@ -17,7 +18,8 @@ namespace MediQueue.Controllers
             _clinicService = clinicService;
             _logger = logger;
         }
-
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             try
@@ -112,7 +114,7 @@ namespace MediQueue.Controllers
                 return RedirectToAction(nameof(Doctors));
             }
         }
-
+        [Authorize(Roles = "Admin, Patient")]
         public async Task<IActionResult> Edit(string id)
         {
             try

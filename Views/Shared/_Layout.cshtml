@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿@* <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -45,6 +45,160 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html> *@
+@using Microsoft.AspNetCore.Identity
+@using MediQueue.Models
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MediQueue</title>
+    <link rel="stylesheet" href="~/css/mediqueue.css" asp-append-version="true" />
+</head>
+<body>
+    <div id="particles-container"></div>
+
+    @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Doctor") || User.IsInRole("Admin")))
+    {
+        var isDoctor = User.IsInRole("Doctor");
+        <div class="app-shell">
+            <aside class="sidebar" id="mqSidebar">
+                <div class="sidebar-brand">
+                    <span class="logo-mark">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
+                    </span>
+                    <div>
+                        <div class="sidebar-title">Medi Queue</div>
+                        <div class="sidebar-sub">@(isDoctor ? "لوحة الطبيب" : "لوحة المدير")</div>
+                    </div>
+                </div>
+                <nav class="side-nav">
+                    @if (isDoctor)
+                    {
+                        <a href="@Url.Action("Dashboard", "Doctor")" class="side-link">الرئيسية</a>
+                        <a href="@Url.Action("Queue", "Doctor")" class="side-link">الطابور</a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Index", "Admin")" class="side-link">لوحة التحكم</a>
+                    }
+                </nav>
+                <div class="sidebar-footer">
+                    <button type="button" class="btn btn-ghost btn-block theme-toggle">🌙 الوضع الليلي</button>
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
+                        <button type="submit" class="btn btn-outline btn-block">تسجيل الخروج</button>
+                    </form>
+                </div>
+            </aside>
+            <div class="shell-main">
+                <header class="topbar">
+                    <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="إظهار القائمة">☰</button>
+                    <div class="topbar-text">
+                        <h1 class="topbar-title">@ViewData["Title"]</h1>
+                        <p class="topbar-sub">@UserManager.GetUserName(User)</p>
+                    </div>
+                </header>
+                <main class="dash-content">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else
+    {
+        <nav class="navbar">
+            <div class="container navbar-inner">
+                <a href="/" class="logo">
+                    <span class="logo-mark" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
+                    </span>
+                    <span>Medi Queue</span>
+                </a>
+
+                <button type="button" class="mobile-toggle" id="mobileMenuBtn" aria-label="القائمة">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+                </button>
+
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="/" class="nav-link">الأطباء</a></li>
+                    
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <li><a href="@Url.Action("MyAppointments", "Appointments")" class="nav-link">مواعيدي</a></li>
+                        <li class="nav-user"><span class="nav-greet">مرحباً، @((await UserManager.GetUserAsync(User))?.FullName ?? User.Identity.Name)</span></li>
+                        <li>
+                            <button type="button" class="btn btn-ghost theme-toggle" title="الوضع الليلي">🌙</button>
+                        </li>
+                        <li>
+                            <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-outline btn-sm">تسجيل الخروج</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li>
+                            <button type="button" class="btn btn-ghost theme-toggle" title="الوضع الليلي">🌙</button>
+                        </li>
+                        <li><a href="@Url.Action("Login", "Account")" class="btn btn-primary btn-sm">تسجيل الدخول</a></li>
+                    }
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            @RenderBody()
+        </main>
+    }
+
+    <script src="~/js/particles.js"></script>
+    <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Theme setup
+                var isDark = localStorage.getItem('mq_darkMode') === '1';
+                if (isDark) document.documentElement.classList.add('dark');
+            
+                function syncThemeButtons() {
+                    var isDarkNow = document.documentElement.classList.contains('dark');
+                    document.querySelectorAll('.theme-toggle').forEach(function(btn) {
+                        btn.textContent = isDarkNow ? '☀️' : '🌙';
+                    });
+                }
+                syncThemeButtons();
+
+                document.querySelectorAll('.theme-toggle').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var isDarkNow = document.documentElement.classList.toggle('dark');
+                        localStorage.setItem('mq_darkMode', isDarkNow ? '1' : '0');
+                        syncThemeButtons();
+                    });
+                });
+
+                // Mobile menu toggle
+                var menuBtn = document.getElementById('mobileMenuBtn');
+                var navLinks = document.getElementById('navLinks');
+                if (menuBtn && navLinks) {
+                    menuBtn.addEventListener('click', function() {
+                        navLinks.classList.toggle('active');
+                    });
+                }
+
+                // Sidebar toggle for dashboard
+                var sidebarToggle = document.getElementById('sidebarToggle');
+                var sidebar = document.getElementById('mqSidebar');
+                if (sidebarToggle && sidebar) {
+                    sidebarToggle.addEventListener('click', function() {
+                        sidebar.classList.toggle('open');
+                    });
+                }
+            });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

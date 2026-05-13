@@ -1,8 +1,211 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "الصفحة الرئيسية";
+    var data = ViewData.Model as Dictionary<string, object>;
+    var clinics = data?["Clinics"] as IEnumerable<MediQueue.Models.Clinic> ?? new List<MediQueue.Models.Clinic>();
+    var doctors = data?["Doctors"] as IEnumerable<MediQueue.Models.User> ?? new List<MediQueue.Models.User>();
+    
+    var clinicsJson = System.Text.Json.JsonSerializer.Serialize(clinics.Select(c => new { c.ClinicID, c.Name, c.Address, c.PhoneNumber }));
+    var doctorsJson = System.Text.Json.JsonSerializer.Serialize(doctors.Select(d => new { d.Id, d.FullName, d.Specialty, d.ClinicID, d.PhoneNumber, d.ProfileImagePath }));
 }
+<style>
+    .search-section {
+        background: var(--surface);
+        padding-block: 3.5rem 2rem;
+        border-bottom: 1px solid var(--border);
+        margin-block-end: 1.75rem;
+    }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    .page-hero-title {
+        font-size: clamp(1.55rem, 3vw, 2.15rem);
+        font-weight: 900;
+        margin-block-end: 1.25rem;
+    }
+
+    .search-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    .search-field {
+        flex: 1 1 260px;
+        position: relative;
+    }
+
+        .search-field .form-input {
+            min-height: 3.25rem;
+            padding-inline-start: 1rem;
+            padding-inline-end: 2.75rem;
+        }
+
+        .search-field svg {
+            position: absolute;
+            inset-inline-end: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+    .filter-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 1.25rem;
+    }
+
+    .stats-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-block: 0.75rem 1rem;
+    }
+
+    .rating-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: #ca8a04;
+        font-weight: 800;
+    }
+
+    .clinic-line {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-block-end: 0.35rem;
+    }
+
+    .main-content {
+        padding-top: 4.25rem;
+    }
+</style>
+
+<section class="search-section">
+    <div class="container fade-in">
+        <h1 class="page-hero-title">ابحث عن طبيبك المناسب</h1>
+        <div class="search-row">
+            <div class="search-field">
+                <input type="search" id="searchInput" class="form-input" placeholder="ابحث باسم الطبيب أو التخصص…" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+            </div>
+            <select id="clinicFilter" class="form-select" style="flex: 0 1 220px; min-height: 3.25rem"></select>
+        </div>
+        <div id="filterContainer" class="filter-container"></div>
+    </div>
+</section>
+
+<div class="container">
+    <div id="doctorsGrid" class="grid grid-cols-4 fade-in"></div>
 </div>
+
+@section Scripts {
+    <script>
+        const ALL_DOCTORS = @Html.Raw(doctorsJson);
+        const ALL_CLINICS = @Html.Raw(clinicsJson);
+
+        let currentSpec = 'الكل';
+        let currentClinic = 'الكل';
+        let searchQuery = '';
+
+        const specialties = ['الكل', ...new Set(ALL_DOCTORS.map(d => d.Specialty).filter(s => s))];
+
+        function getClinicById(id) {
+            return ALL_CLINICS.find(c => c.ClinicID === id);
+        }
+
+        function renderClinicOptions() {
+            const sel = document.getElementById('clinicFilter');
+            let options = '<option value="الكل">كل العيادات</option>';
+            ALL_CLINICS.forEach(c => {
+                options += `<option value="${c.ClinicID}">${c.Name}</option>`;
+            });
+            sel.innerHTML = options;
+        }
+
+        function renderSpecFilters() {
+            const container = document.getElementById('filterContainer');
+            container.innerHTML = specialties.map(s => {
+                return `<button type="button" class="filter-chip ${currentSpec === s ? 'active' : ''}" data-spec="${s}">${s}</button>`;
+            }).join('');
+
+            container.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    currentSpec = this.getAttribute('data-spec');
+                    renderSpecFilters();
+                    renderDoctors();
+                });
+            });
+        }
+
+        function formatPrice(p) {
+            return p ? Math.round(p) + ' ج.م' : 'مجاناً';
+        }
+
+        function showSkeletons() {
+            const grid = document.getElementById('doctorsGrid');
+            grid.innerHTML = Array(4).fill(0).map(() => `
+                <div class="card" style="pointer-events:none">
+                    <div class="skeleton" style="width:100%;aspect-ratio:1;margin-block-end:1rem"></div>
+                    <div class="skeleton" style="width:45%;height:1rem;margin-block-end:0.65rem"></div>
+                    <div class="skeleton" style="width:78%;height:1.35rem;margin-block-end:1rem"></div>
+                    <div class="skeleton" style="width:100%;height:2.85rem;border-radius:0.65rem"></div>
+                </div>
+            `).join('');
+        }
+
+        function renderDoctors() {
+            const grid = document.getElementById('doctorsGrid');
+            const filtered = ALL_DOCTORS.filter(d => {
+                const specOk = currentSpec === 'الكل' || d.Specialty === currentSpec;
+                const clinicOk = currentClinic === 'الكل' || String(d.ClinicID) === currentClinic;
+                const q = searchQuery.trim().toLowerCase();
+                let searchOk = true;
+                if (q) {
+                    const clinic = getClinicById(d.ClinicID);
+                    const cName = clinic ? clinic.Name.toLowerCase() : '';
+                    searchOk = (d.FullName && d.FullName.toLowerCase().includes(q)) || 
+                               (d.Specialty && d.Specialty.toLowerCase().includes(q)) || 
+                               cName.includes(q);
+                }
+                return specOk && clinicOk && searchOk;
+            });
+
+            if (!filtered.length) {
+                grid.innerHTML = '<div class="card text-center" style="grid-column: 1/-1; padding: 3rem; color: var(--text-secondary)">لا توجد نتائج مطابقة لبحثك.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(d => {
+                const clinic = getClinicById(d.ClinicID);
+                const img = d.ProfileImagePath || 'https://via.placeholder.com/400?text=طبيب';
+                return `
+                    <article class="card doctor-card fade-in">
+                        <img src="${img}" alt="${d.FullName}" class="doctor-image" loading="lazy" />
+                        <div class="doctor-info" style="display:flex;flex-direction:column;flex:1">
+                            <span class="specialty">${d.Specialty || 'طبيب عام'}</span>
+                            <h3>${d.FullName}</h3>
+                            <p class="clinic-line">${clinic ? clinic.Name : 'غير محدد'}</p>
+                            <a href="/Appointments/Book?doctorId=${d.Id}" class="btn btn-primary" style="margin-top:auto">احجز الآن</a>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', e => {
+            searchQuery = e.target.value;
+            renderDoctors();
+        });
+        document.getElementById('clinicFilter').addEventListener('change', e => {
+            currentClinic = e.target.value;
+            renderDoctors();
+        });
+
+        renderClinicOptions();
+        renderSpecFilters();
+        showSkeletons();
+        setTimeout(renderDoctors, 400);
+    </script>
+}
