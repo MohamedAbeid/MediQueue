@@ -1,85 +1,84 @@
 @model IEnumerable<MediQueue.Models.DoctorAvailableSlot>
 
 @{
-    ViewData["Title"] = "Manage Available Slots";
+    ViewData["Title"] = "إدارة المواعيد المتاحة";
 }
 
-<div class="container mt-5">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>إدارة المواعيد المتاحة</h1>
+<div class="container fade-in" style="padding-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 class="section-title" style="margin: 0;">المواعيد المتاحة</h1>
+            <p class="text-muted" style="margin-top: 0.5rem;">أضف أو عدّل فترات عملك المتاحة لحجز المرضى.</p>
         </div>
-        <div class="col-md-4 text-end">
-            <a asp-action="AddAvailableSlot" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> إضافة موعد متاح
-            </a>
-        </div>
+        <a asp-action="AddAvailableSlot" class="btn btn-primary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.5rem;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            إضافة موعد جديد
+        </a>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
     }
-
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
     }
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info">
-            لا توجد مواعيد متاحة. <a asp-action="AddAvailableSlot">أضف واحداً الآن</a>
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted); margin-bottom:1rem">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <h3 style="color:var(--text-secondary); margin-bottom: 0.5rem">لا توجد مواعيد متاحة</h3>
+            <p style="color:var(--text-muted); margin-bottom: 1.5rem;">لم تقم بإضافة أي فترات عمل متاحة حتى الآن.</p>
+            <a asp-action="AddAvailableSlot" class="btn btn-primary">إضافة موعد الآن</a>
         </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <th>التاريخ</th>
-                        <th>وقت البداية</th>
-                        <th>وقت النهاية</th>
-                        <th>الحد الأقصى للمرضى</th>
-                        <th>الحجوزات الحالية</th>
-                        <th>الأماكن المتاحة</th>
-                        <th>الإجراءات</th>
+                        <th style="text-align: center;">التاريخ</th>
+                        <th style="text-align: center;">البداية</th>
+                        <th style="text-align: center;">النهاية</th>
+                        <th style="text-align: center;">الأقصى</th>
+                        <th style="text-align: center;">الحجوزات</th>
+                        <th style="text-align: center;">المتاح</th>
+                        <th style="text-align: center;">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var slot in Model)
+                    @foreach (var slot in Model.OrderByDescending(s => s.Date))
                     {
+                        var available = slot.MaxPatients - slot.CurrentBookings;
+                        var isFull = available <= 0;
+
                         <tr>
-                            <td>@slot.Date.ToString("yyyy-MM-dd")</td>
-                            <td>@slot.StartTime.ToString(@"hh\:mm")</td>
-                            <td>@slot.EndTime.ToString(@"hh\:mm")</td>
-                            <td>@slot.MaxPatients</td>
-                            <td>@slot.CurrentBookings</td>
-                            <td>@(slot.MaxPatients - @slot.CurrentBookings)</td>
-                            <td>
-                                <span class="badge bg-info">@slot.CurrentBookings</span>
+                            <td style="text-align: center; font-weight: 600;" dir="ltr">@slot.Date.ToString("yyyy-MM-dd")</td>
+                            <td style="text-align: center; color: var(--primary); font-weight: 700;" dir="ltr">@slot.StartTime.ToString(@"hh\:mm")</td>
+                            <td style="text-align: center; color: var(--primary);" dir="ltr">@slot.EndTime.ToString(@"hh\:mm")</td>
+                            <td style="text-align: center;">@slot.MaxPatients</td>
+                            <td style="text-align: center;">
+                                <span class="status-badge" style="background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--primary);">
+                                    @slot.CurrentBookings
+                                </span>
                             </td>
-                            <td>
-                                <span class="badge @(slot.MaxPatients - slot.CurrentBookings > 0 ? "bg-success" : "bg-danger")">
-                                    @(slot.MaxPatients - slot.CurrentBookings)
+                            <td style="text-align: center;">
+                                <span class="status-badge" style="background: @(isFull ? "color-mix(in srgb, var(--danger) 15%, transparent)" : "color-mix(in srgb, var(--success) 15%, transparent)"); color: @(isFull ? "var(--danger)" : "var(--success)"); font-weight: 800;">
+                                    @available
                                 </span>
                             </td>
                             <td>
-                                <a asp-action="EditAvailableSlot" asp-route-id="@slot.SlotID" class="btn btn-sm btn-warning">
-                                    <i class="bi bi-pencil"></i> تعديل
-                                </a>
-                                <form asp-action="DeleteAvailableSlot" asp-route-id="@slot.SlotID" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد؟')">
-                                        <i class="bi bi-trash"></i> حذف
-                                    </button>
-                                </form>
+                                <div class="table-actions" style="justify-content: center;">
+                                    <a asp-action="EditAvailableSlot" asp-route-id="@slot.SlotID" class="btn btn-sm btn-outline" style="color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, transparent);" title="تعديل">تعديل</a>
+                                    <form asp-action="DeleteAvailableSlot" asp-route-id="@slot.SlotID" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger-outline" onclick="return confirm('هل أنت متأكد من الحذف؟')" title="حذف">حذف</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }

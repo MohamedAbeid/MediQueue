@@ -234,8 +234,9 @@ namespace MediQueue.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpPost]
         [Authorize(Roles = "Doctor")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteAvailableSlot(int id)
         {
             try
@@ -254,13 +255,13 @@ namespace MediQueue.Controllers
                 }
 
                 await _availableSlotService.DeleteSlotAsync(id);
-                TempData["SuccessMessage"] = "Slot deleted successfully!";
+                TempData["SuccessMessage"] = "تم حذف الموعد بنجاح!";
                 return RedirectToAction(nameof(ManageAvailableSlots));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting slot");
-                TempData["ErrorMessage"] = "Error deleting slot";
+                TempData["ErrorMessage"] = "حدث خطأ أثناء محاولة الحذف.";
                 return RedirectToAction(nameof(ManageAvailableSlots));
             }
         }
@@ -396,6 +397,18 @@ namespace MediQueue.Controllers
 
             var created = await _appointmentService.CreateAppointmentAsync(appointment);
 
+            // Update the slot's current bookings
+            var slot = await _context.DoctorAvailableSlots
+                .FirstOrDefaultAsync(s => s.DoctorID == model.DoctorID &&
+                                          s.Date.Date == model.AppointmentDate.Date &&
+                                          s.StartTime == model.AppointmentTime &&
+                                          s.IsActive);
+
+            if (slot != null)
+            {
+                await _availableSlotService.BookSlotAsync(slot.SlotID);
+            }
+
             var queue = new Queue
             {
                 AppointmentID = created.AppointmentID,
@@ -452,6 +465,23 @@ namespace MediQueue.Controllers
             return RedirectToAction(nameof(MyAppointments));
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Index()
+        {
+            try
+            {
+                var allAppointments = await _appointmentService.GetAllAppointmentsAsync();
+                var orderedAppointments = allAppointments.OrderByDescending(a => a.AppointmentDate).ThenBy(a => a.AppointmentTime).ToList();
+                return View(orderedAppointments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching all appointments for admin");
+                TempData["ErrorMessage"] = "حدث خطأ أثناء جلب قائمة الحجوزات.";
+                return RedirectToAction("Index", "Admin");
+            }
+        }
     }
         
     public class BookAppointmentRequest

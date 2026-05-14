@@ -115,10 +115,10 @@
                     </div>
                 }
                 <div class="form-group">
-                    <label>اختار التاريخ</label>
+                    <label class="form-label">اختار التاريخ</label>
 
-                    <select id="dateSelect" class="form-control">
-                        <option value="">اختر تاريخ</option>
+                    <select id="dateSelect" class="form-input" dir="ltr" style="text-align: right;">
+                        <option value="">-- يرجى اختيار تاريخ الموعد --</option>
 
                         @foreach (var date in ViewBag.Dates)
                         {
@@ -132,24 +132,13 @@
                 <div class="form-group">
 
                     <label class="form-label">
-                        الوقت المتاح
+                        الأوقات المتاحة
                     </label>
 
                     <div class="slots-grid" id="slotsContainer">
-                        @foreach (var slot in slots)
-                        {
-                            <div class="time-slot" data-time="@slot.StartTime">
-                                <div>
-                                    @slot.Date.ToString("dd/MM/yyyy")
-                                </div>
-
-                                <div>
-                                    @slot.StartTime.ToString(@"hh\:mm")
-                                    -
-                                    @slot.EndTime.ToString(@"hh\:mm")
-                                </div>
-                            </div>
-                        }
+                        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 1rem; border: 1px dashed var(--border); border-radius: var(--radius);">
+                            يرجى اختيار التاريخ أولاً لعرض الأوقات المتاحة
+                        </div>
                     </div>
 
                 </div>
@@ -159,6 +148,7 @@
 
                     <label class="form-label"
                            asp-for="PatientName">
+                        اسم المريض
                     </label>
 
                     <input class="form-input"

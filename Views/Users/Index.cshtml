@@ -95,10 +95,13 @@
                                 }
                             </td>
                             <td>
-                                <div class="table-actions" style="justify-content: center;">
-                                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline" title="التفاصيل">عرض</a>
-                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline" style="color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent);" title="تعديل">تعديل</a>
-                                    <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-danger-outline" title="حذف">حذف</a>
+                                <div class="table-actions" style="justify-content: center; gap: 0.5rem;">
+                                    <a asp-action="ResetPassword" asp-route-id="@user.Id" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; color: #eab308; border-color: color-mix(in srgb, #eab308 30%, transparent);" title="تغيير كلمة المرور">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem;" title="التفاصيل">عرض</a>
+                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent);" title="تعديل">تعديل</a>
+                                    <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-danger-outline" style="padding: 0.25rem 0.5rem;" title="حذف">حذف</a>
                                 </div>
                             </td>
                         </tr>

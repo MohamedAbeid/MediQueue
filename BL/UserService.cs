@@ -81,8 +81,11 @@ namespace MediQueue.BL
         {
             try
             {
-                _context.Users.Update(user);
-                await _context.SaveChangesAsync();
+                var result = await _userManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                {
+                    throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
                 _logger.LogInformation($"User updated successfully: {user.FullName}");
                 return user;
             }
@@ -97,15 +100,36 @@ namespace MediQueue.BL
         {
             try
             {
-                var user = await _context.Users.FindAsync(userId);
+                var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
                     _logger.LogWarning($"User with ID {userId} not found");
                     return false;
                 }
 
-                _context.Users.Remove(user);
+                // 1. حذف السجلات المرتبطة في الطابور (Queues)
+                var doctorQueues = _context.Queues.Where(q => q.DoctorID == userId);
+                if (doctorQueues.Any())
+                {
+                    _context.Queues.RemoveRange(doctorQueues);
+                }
+
+                // 2. حذف المواعيد (Appointments) المرتبطة بالمستخدم (سواء كان مريضاً أو طبيباً)
+                var userAppointments = _context.Appointments.Where(a => a.PatientID == userId || a.DoctorID == userId);
+                if (userAppointments.Any())
+                {
+                    _context.Appointments.RemoveRange(userAppointments);
+                }
+
+                // حفظ التغييرات لحذف البيانات المرتبطة أولاً
                 await _context.SaveChangesAsync();
+
+                // 3. حذف المستخدم
+                var result = await _userManager.DeleteAsync(user);
+                if (!result.Succeeded)
+                {
+                    throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
                 _logger.LogInformation($"User deleted successfully: {user.FullName}");
                 return true;
             }
@@ -182,6 +206,35 @@ namespace MediQueue.BL
             {
                 _logger.LogError(ex, "Error creating doctor");
                 return (false, "An error occurred while creating the doctor.", null);
+            }
+        }
+
+        public async Task<(bool Success, string Message)> ResetUserPasswordAsync(string userId, string newPassword)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return (false, "User not found.");
+                }
+
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"Password reset successfully for user: {user.FullName}");
+                    return (true, "تم إعادة تعيين كلمة المرور بنجاح.");
+                }
+                
+                var errorMsg = string.Join(", ", result.Errors.Select(e => e.Description));
+                return (false, errorMsg);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error resetting password for user {userId}");
+                return (false, "حدث خطأ غير متوقع أثناء محاولة تغيير كلمة المرور.");
             }
         }
     }

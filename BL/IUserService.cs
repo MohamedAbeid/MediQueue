@@ -13,5 +13,6 @@ namespace MediQueue.BL
         Task<bool> UserExistsAsync(string userId);
         Task<IEnumerable<User>> SearchDoctorsBySpecialtyAsync(string specialty);
         Task<(bool Success, string Message, User Doctor)> CreateDoctorAsync(User doctor, string password);
+        Task<(bool Success, string Message)> ResetUserPasswordAsync(string userId, string newPassword);
     }
 }

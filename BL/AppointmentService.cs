@@ -170,6 +170,20 @@ namespace MediQueue.BL
                 }
 
                 appointment.Status = AppointmentStatus.Cancelled;
+
+                // Release the slot
+                var slot = await _context.DoctorAvailableSlots
+                    .FirstOrDefaultAsync(s => s.DoctorID == appointment.DoctorID &&
+                                              s.Date.Date == appointment.AppointmentDate.Date &&
+                                              s.StartTime <= appointment.AppointmentTime &&
+                                              s.EndTime > appointment.AppointmentTime &&
+                                              s.IsActive);
+                
+                if (slot != null && slot.CurrentBookings > 0)
+                {
+                    slot.CurrentBookings--;
+                }
+
                 await _context.SaveChangesAsync();
                 _logger.LogInformation($"Appointment cancelled successfully: ID {appointmentId}");
                 return true;

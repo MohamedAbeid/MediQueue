@@ -178,6 +178,7 @@ namespace MediQueue.Controllers
 
                 user.FullName = userVM.FullName;
                 user.Email = userVM.Email;
+                user.UserName = userVM.Email;
                 user.PhoneNumber = userVM.PhoneNumber;
                 user.Specialty = userVM.Specialty;
                 user.ClinicID = userVM.ClinicID;
@@ -189,7 +190,7 @@ namespace MediQueue.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error updating user with ID {id}");
-                TempData["ErrorMessage"] = "Error updating user";
+                TempData["ErrorMessage"] = "حدث خطأ غير متوقع أثناء محاولة التعديل. " + ex.Message;
                 var clinics = await _clinicService.GetAllClinicsAsync();
                 ViewData["Clinics"] = clinics;
                 return View(userVM);
@@ -234,7 +235,7 @@ namespace MediQueue.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error deleting user with ID {id}");
-                TempData["ErrorMessage"] = "Error deleting user";
+                TempData["ErrorMessage"] = "لا يمكن حذف هذا المستخدم لوجود بيانات (مواعيد/حجوزات) مرتبطة به في النظام.";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -346,6 +347,68 @@ namespace MediQueue.Controllers
                 TempData["ErrorMessage"] = "Error creating doctor";
                 var clinics = await _clinicService.GetAllClinicsAsync();
                 ViewData["Clinics"] = clinics;
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetPassword(string id)
+        {
+            try
+            {
+                var user = await _userService.GetUserByIdAsync(id);
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "User not found";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var model = new ResetPasswordViewModel
+                {
+                    UserId = user.Id,
+                    FullName = user.FullName
+                };
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error loading reset password form for user {id}");
+                TempData["ErrorMessage"] = "Error loading form";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var (success, message) = await _userService.ResetUserPasswordAsync(model.UserId, model.NewPassword);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = message;
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = message;
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error resetting password for user {model.UserId}");
+                TempData["ErrorMessage"] = "حدث خطأ غير متوقع.";
                 return View(model);
             }
         }

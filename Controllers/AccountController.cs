@@ -94,5 +94,47 @@ namespace MediQueue.Controllers
             }
             return View(userViewModel);
         }
+        [HttpGet]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            var result = await userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (result.Succeeded)
+            {
+                await signInManger.RefreshSignInAsync(user);
+                TempData["SuccessMessage"] = "تم تغيير كلمة المرور بنجاح.";
+                
+                var roles = await userManager.GetRolesAsync(user);
+                if (roles.Contains("Admin")) return RedirectToAction("Index", "Admin");
+                if (roles.Contains("Doctor")) return RedirectToAction("Dashboard", "Doctor");
+                return RedirectToAction("Index", "Home");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
+        }
     }
 }

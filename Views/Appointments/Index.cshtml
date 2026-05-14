@@ -1,0 +1,89 @@
+@model IEnumerable<MediQueue.Models.Appointment>
+
+@{
+    ViewData["Title"] = "الحجوزات";
+}
+
+<div class="container fade-in" style="padding-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 class="section-title" style="margin: 0;">إدارة الحجوزات</h1>
+            <p class="text-muted" style="margin-top: 0.5rem;">عرض ومتابعة كافة الحجوزات المسجلة في النظام.</p>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px; text-align: center;">رقم الحجز</th>
+                        <th>المريض</th>
+                        <th>الطبيب</th>
+                        <th style="text-align: center;">التاريخ</th>
+                        <th style="text-align: center;">الوقت</th>
+                        <th style="text-align: center;">الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var apt in Model)
+                    {
+                        <tr>
+                            <td style="text-align: center; font-family: monospace; color: var(--text-muted);">
+                                #@apt.AppointmentID
+                            </td>
+                            <td>
+                                <span style="font-weight: 700; color: var(--text-primary);">@(apt.Patient.FullName ?? apt.Patient.FullName)</span>
+                            </td>
+                            <td>
+                                <span style="font-weight: 600;">@(apt.Doctor.FullName ?? apt.Doctor.FullName)</span>
+                            </td>
+                            <td style="text-align: center;" dir="ltr">
+                                @apt.AppointmentDate.ToString("yyyy-MM-dd")
+                            </td>
+                            <td style="text-align: center; font-weight: 600; color: var(--accent);" dir="ltr">
+                                @apt.AppointmentTime.ToString(@"hh\:mm")
+                            </td>
+                            <td style="text-align: center;">
+                                @if (apt.Status == MediQueue.Models.AppointmentStatus.Booked)
+                                {
+                                    <span class="status-badge status-booked">في الانتظار</span>
+                                }
+                                else if (apt.Status == MediQueue.Models.AppointmentStatus.Completed)
+                                {
+                                    <span class="status-badge status-completed">مكتمل</span>
+                                }
+                                else if (apt.Status == MediQueue.Models.AppointmentStatus.Cancelled)
+                                {
+                                    <span class="status-badge status-progress" style="background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger);">ملغي</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge">@apt.Status.ToString()</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted); margin-bottom:1rem">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <h3 style="color:var(--text-secondary); margin-bottom: 0.5rem">لا توجد حجوزات</h3>
+            <p style="color:var(--text-muted);">لم يتم تسجيل أي حجوزات في النظام حتى الآن.</p>
+        </div>
+    }
+</div>
