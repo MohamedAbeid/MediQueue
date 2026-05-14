@@ -34,6 +34,7 @@ namespace MediQueue
             builder.Services.AddScoped<IClinicService, ClinicService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            builder.Services.AddScoped<IDoctorAvailableSlotService, DoctorAvailableSlotService>();
             builder.Services.AddScoped<IQueueService, QueueService>();
             var app = builder.Build();
 

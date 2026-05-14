@@ -238,5 +238,116 @@ namespace MediQueue.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateDoctor()
+        {
+            try
+            {
+                var clinics = await _clinicService.GetAllClinicsAsync();
+                ViewData["Clinics"] = clinics;
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading create doctor form");
+                TempData["ErrorMessage"] = "Error loading form";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateDoctor(AddDoctorViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var clinics = await _clinicService.GetAllClinicsAsync();
+                    ViewData["Clinics"] = clinics;
+                    return View(model);
+                }
+
+                // التحقق من الصورة
+                string profileImagePath = null;
+                if (model.ProfileImage != null && model.ProfileImage.Length > 0)
+                {
+                    // التحقق من صيغة الصورة
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var fileExtension = Path.GetExtension(model.ProfileImage.FileName).ToLower();
+
+                    if (!allowedExtensions.Contains(fileExtension))
+                    {
+                        ModelState.AddModelError("ProfileImage", "صيغة الصورة غير مدعومة. استخدم jpg أو png أو gif");
+                        var clinics = await _clinicService.GetAllClinicsAsync();
+                        ViewData["Clinics"] = clinics;
+                        return View(model);
+                    }
+
+                    // التحقق من حجم الصورة (أقصى 5MB)
+                    if (model.ProfileImage.Length > 5 * 1024 * 1024)
+                    {
+                        ModelState.AddModelError("ProfileImage", "حجم الصورة يجب أن لا يتجاوز 5MB");
+                        var clinics = await _clinicService.GetAllClinicsAsync();
+                        ViewData["Clinics"] = clinics;
+                        return View(model);
+                    }
+
+                    // إنشاء مجلد للصور إذا لم يكن موجوداً
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "doctors");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // حفظ الصورة
+                    var uniqueFileName = Guid.NewGuid().ToString() + fileExtension;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ProfileImage.CopyToAsync(fileStream);
+                    }
+
+                    profileImagePath = Path.Combine("/uploads/doctors", uniqueFileName);
+                }
+
+                var doctor = new User
+                {
+                    FullName = model.FullName,
+                    Email = model.Email,
+                    PhoneNumber = model.PhoneNumber,
+                    Specialty = model.Specialty,
+                    ClinicID = model.ClinicID,
+                    ProfileImagePath = profileImagePath
+                };
+
+                var (success, message, createdDoctor) = await _userService.CreateDoctorAsync(doctor, model.Password);
+
+                if (success)
+                {
+                    TempData["SuccessMessage"] = $"Doctor '{model.FullName}' created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = message;
+                    var clinics = await _clinicService.GetAllClinicsAsync();
+                    ViewData["Clinics"] = clinics;
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating doctor");
+                TempData["ErrorMessage"] = "Error creating doctor";
+                var clinics = await _clinicService.GetAllClinicsAsync();
+                ViewData["Clinics"] = clinics;
+                return View(model);
+            }
+        }
     }
 }

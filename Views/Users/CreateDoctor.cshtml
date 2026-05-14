@@ -1,0 +1,111 @@
+@model MediQueue.ViewModel.AddDoctorViewModel
+
+@{
+    ViewData["Title"] = "Add New Doctor";
+    var clinics = ViewData["Clinics"] as IEnumerable<MediQueue.Models.Clinic> ?? new List<MediQueue.Models.Clinic>();
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1>إنشاء طبيب جديد</h1>
+            <hr />
+
+            <form asp-action="CreateDoctor" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label fw-semibold text-dark"></label>
+                            <input asp-for="FullName" class="form-control form-control-lg rounded-3 pt-20 pb-20 pl-50" placeholder="أدخل الاسم الكامل" />
+                            <span asp-validation-for="FullName" class="text-danger small d-block mt-2"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold text-dark"></label>
+                            <input asp-for="Email" type="email" class="form-control form-control-lg rounded-3" placeholder="أدخل البريد الإلكتروني" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold text-dark"></label>
+                            <input asp-for="PhoneNumber" type="tel" class="form-control form-control-lg rounded-3" placeholder="أدخل رقم الهاتف" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Specialty" class="form-label fw-semibold text-dark"></label>
+                            <input asp-for="Specialty" class="form-control form-control-lg rounded-3" placeholder="أدخل التخصص، مثل: قلب، جلدية" />
+                            <span asp-validation-for="Specialty" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="ClinicID" class="form-label fw-semibold text-dark"></label>
+                            <select asp-for="ClinicID" class="form-control form-control-lg rounded-3" asp-items="@(new SelectList(clinics, "ClinicID", "Name"))">
+                                <option value="">-- اختر العيادة --</option>
+                            </select>
+                            <span asp-validation-for="ClinicID" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="ProfileImage" class="form-label fw-semibold text-dark"></label>
+                            <input asp-for="ProfileImage" type="file" class="form-control form-control-lg rounded-3" accept="image/*" />
+                            <small class="form-text text-muted">مدعوم: jpg، png، gif. الحد الأقصى للحجم: 5MB</small>
+                            <span asp-validation-for="ProfileImage" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label fw-semibold text-dark"></label>
+                            <input asp-for="Password" type="password" class="form-control form-control-lg rounded-3" placeholder="أدخل كلمة المرور" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold text-dark"></label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control form-control-lg rounded-3" placeholder="أدخل تأكيد كلمة المرور" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> إنشاء طبيب
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,4 +1,5 @@
 using MediQueue.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace MediQueue.BL
@@ -7,11 +8,13 @@ namespace MediQueue.BL
     {
         private readonly MediQueueContext _context;
         private readonly ILogger<UserService> _logger;
+        private readonly UserManager<User> _userManager;
 
-        public UserService(MediQueueContext context, ILogger<UserService> logger)
+        public UserService(MediQueueContext context, ILogger<UserService> logger, UserManager<User> userManager)
         {
             _context = context;
             _logger = logger;
+            _userManager = userManager;
         }
 
         public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -138,6 +141,46 @@ namespace MediQueue.BL
             {
                 _logger.LogError(ex, $"Error searching doctors by specialty: {specialty}");
                 throw;
+            }
+        }
+
+        public async Task<(bool Success, string Message, User Doctor)> CreateDoctorAsync(User doctor, string password)
+        {
+            try
+            {
+                var existingUser = await _userManager.FindByEmailAsync(doctor.Email);
+                if (existingUser != null)
+                {
+                    _logger.LogWarning($"Doctor with email {doctor.Email} already exists");
+                    return (false, "Doctor with this email already exists.", null);
+                }
+
+                doctor.UserName = doctor.Email;
+                var result = await _userManager.CreateAsync(doctor, password);
+
+                if (result.Succeeded)
+                {
+                    var roleResult = await _userManager.AddToRoleAsync(doctor, "Doctor");
+                    if (!roleResult.Succeeded)
+                    {
+                        _logger.LogError($"Failed to assign Doctor role to user {doctor.Id}");
+                        return (false, "Doctor created but failed to assign role.", doctor);
+                    }
+
+                    _logger.LogInformation($"Doctor created successfully: {doctor.FullName}");
+                    return (true, "Doctor created successfully.", doctor);
+                }
+                else
+                {
+                    var errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+                    _logger.LogError($"Failed to create doctor: {errorMessage}");
+                    return (false, errorMessage, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating doctor");
+                return (false, "An error occurred while creating the doctor.", null);
             }
         }
     }

@@ -1,332 +1,238 @@
 using MediQueue.BL;
 using MediQueue.Models;
 using MediQueue.ViewModel;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediQueue.Controllers
 {
+    
     public class AppointmentsController : Controller
     {
         private readonly IAppointmentService _appointmentService;
-        private readonly IUserService _userService;
-        private readonly IQueueService _queueService;
+        private readonly IDoctorAvailableSlotService _availableSlotService;
+        private readonly UserManager<User> _userManager;
         private readonly ILogger<AppointmentsController> _logger;
 
         public AppointmentsController(
             IAppointmentService appointmentService,
-            IUserService userService,
-            IQueueService queueService,
+            IDoctorAvailableSlotService availableSlotService,
+            UserManager<User> userManager,
             ILogger<AppointmentsController> logger)
         {
             _appointmentService = appointmentService;
-            _userService = userService;
-            _queueService = queueService;
+            _availableSlotService = availableSlotService;
+            _userManager = userManager;
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> ManageAvailableSlots()
         {
             try
             {
-                var appointments = await _appointmentService.GetAllAppointmentsAsync();
-                return View(appointments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching all appointments");
-                TempData["ErrorMessage"] = "Error fetching appointments";
-                return RedirectToAction("Index", "Home");
-            }
-        }
-
-        public async Task<IActionResult> Details(int id)
-        {
-            try
-            {
-                var appointment = await _appointmentService.GetAppointmentByIdAsync(id);
-                if (appointment == null)
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
                 {
-                    TempData["ErrorMessage"] = "Appointment not found";
-                    return RedirectToAction(nameof(Index));
+                    return Unauthorized();
                 }
-                return View(appointment);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error fetching appointment with ID {id}");
-                TempData["ErrorMessage"] = "Error fetching appointment";
-                return RedirectToAction(nameof(Index));
-            }
-        }
 
-        public async Task<IActionResult> MyAppointments(string userId)
-        {
-            try
-            {
-                var appointments = await _appointmentService.GetAppointmentsByPatientAsync(userId);
-                return View(appointments);
+                var slots = await _availableSlotService.GetAllSlotsByDoctorAsync(user.Id);
+                return View(slots);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error fetching appointments for patient {userId}");
-                TempData["ErrorMessage"] = "Error fetching your appointments";
+                _logger.LogError(ex, "Error loading available slots");
+                TempData["ErrorMessage"] = "Error loading available slots";
                 return RedirectToAction("Index", "Home");
             }
         }
 
-        public async Task<IActionResult> UpcomingAppointments(string userId)
+        [HttpGet]
+        [Authorize(Roles = "Doctor")]
+        public IActionResult AddAvailableSlot()
         {
-            try
-            {
-                var appointments = await _appointmentService.GetUpcomingAppointmentsAsync(userId);
-                return View(appointments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error fetching upcoming appointments for user {userId}");
-                TempData["ErrorMessage"] = "Error fetching upcoming appointments";
-                return RedirectToAction("Index", "Home");
-            }
-        }
-
-        public async Task<IActionResult> Create()
-        {
-            try
-            {
-                var doctors = await _userService.GetAllDoctorsAsync();
-                ViewData["Doctors"] = doctors;
-                return View(new AppointmentVM());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading create form");
-                TempData["ErrorMessage"] = "Error loading create form";
-                return RedirectToAction(nameof(Index));
-            }
+            return View();
         }
 
         [HttpPost]
+        [Authorize(Roles = "Doctor")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([FromForm] AppointmentVM appointmentVM)
+        public async Task<IActionResult> AddAvailableSlot(AvailableSlotViewModel model)
         {
             try
             {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return Unauthorized();
+                }
+                ModelState.Remove("DoctorID");
+                ModelState.Remove("DoctorName");
+                ModelState.Remove("AvailableSlotsCount");
                 if (!ModelState.IsValid)
                 {
-                    var doctors = await _userService.GetAllDoctorsAsync();
-                    ViewData["Doctors"] = doctors;
-                    return View(appointmentVM);
+                    var errors = ModelState.Values.SelectMany(v => v.Errors);
+                    foreach (var error in errors)
+                    {
+                        _logger.LogError($"Model Error: {error.ErrorMessage}");
+                    }
+                    return View(model);
                 }
 
-                var isAvailable = await _appointmentService.IsTimeSlotAvailableAsync(
-                    appointmentVM.DoctorID,
-                    appointmentVM.AppointmentDate,
-                    appointmentVM.AppointmentTime);
-
-                if (!isAvailable)
+                // Validate date is not in the past
+                if (model.Date.Date < DateTime.Now.Date)
                 {
-                    var doctors = await _userService.GetAllDoctorsAsync();
-                    ViewData["Doctors"] = doctors;
-                    ModelState.AddModelError("", "The selected time slot is not available");
-                    return View(appointmentVM);
+                    ModelState.AddModelError("Date", "Cannot add slots for past dates");
+                    return View(model);
                 }
 
-                var appointment = new Appointment
+                // Validate time range
+                if (model.EndTime <= model.StartTime)
                 {
-                    PatientID = appointmentVM.PatientID,
-                    DoctorID = appointmentVM.DoctorID,
-                    AppointmentDate = appointmentVM.AppointmentDate,
-                    AppointmentTime = appointmentVM.AppointmentTime,
-                    Status = appointmentVM.Status
-                };
+                    ModelState.AddModelError("EndTime", "End time must be after start time");
+                    return View(model);
+                }
 
-                var createdAppointment = await _appointmentService.CreateAppointmentAsync(appointment);
-
-                var queue = new Queue
+                var slot = new DoctorAvailableSlot
                 {
-                    AppointmentID = createdAppointment.AppointmentID,
-                    DoctorID = appointmentVM.DoctorID,
-                    Position = await _queueService.GetNextPositionAsync(appointmentVM.DoctorID),
-                    EstimatedTime = appointmentVM.AppointmentDate.Add(appointmentVM.AppointmentTime),
+                    DoctorID = user.Id,
+                    Date = model.Date,
+                    StartTime = model.StartTime,
+                    EndTime = model.EndTime,
+                    MaxPatients = model.MaxPatients,
                     IsActive = true
                 };
 
-                await _queueService.CreateQueueAsync(queue);
-
-                TempData["SuccessMessage"] = "Appointment created successfully";
-                return RedirectToAction(nameof(Details), new { id = createdAppointment.AppointmentID });
+                await _availableSlotService.CreateSlotAsync(slot);
+                TempData["SuccessMessage"] = "Available slot added successfully!";
+                return RedirectToAction("ManageAvailableSlots");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating appointment");
-                TempData["ErrorMessage"] = "Error creating appointment";
-                var doctors = await _userService.GetAllDoctorsAsync();
-                ViewData["Doctors"] = doctors;
-                return View(appointmentVM);
+                _logger.LogError(ex, "Error adding available slot");
+                TempData["ErrorMessage"] = $"Error adding available slot: {ex.Message}";
+                return View(model);
             }
         }
 
-        public async Task<IActionResult> Edit(int id)
+        [HttpGet]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> EditAvailableSlot(int id)
         {
             try
             {
-                var appointment = await _appointmentService.GetAppointmentByIdAsync(id);
-                if (appointment == null)
+                var slot = await _availableSlotService.GetSlotByIdAsync(id);
+                if (slot == null)
                 {
-                    TempData["ErrorMessage"] = "Appointment not found";
-                    return RedirectToAction(nameof(Index));
+                    TempData["ErrorMessage"] = "Slot not found";
+                    return RedirectToAction(nameof(ManageAvailableSlots));
+                }       
+
+                var user = await _userManager.GetUserAsync(User);
+                if (user?.Id != slot.DoctorID)
+                {
+                    return Unauthorized();
                 }
 
-                var doctors = await _userService.GetAllDoctorsAsync();
-                ViewData["Doctors"] = doctors;
-
-                var appointmentVM = new AppointmentVM
+                var model = new AvailableSlotViewModel
                 {
-                    AppointmentID = appointment.AppointmentID,
-                    PatientID = appointment.PatientID,
-                    DoctorID = appointment.DoctorID,
-                    AppointmentDate = appointment.AppointmentDate,
-                    AppointmentTime = appointment.AppointmentTime,
-                    Status = appointment.Status
+                    SlotID = slot.SlotID,
+                    Date = slot.Date,
+                    StartTime = slot.StartTime,
+                    EndTime = slot.EndTime,
+                    MaxPatients = slot.MaxPatients,
+                    AvailableSlotsCount = slot.MaxPatients - slot.CurrentBookings
                 };
 
-                return View(appointmentVM);
+                return View(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error loading edit form for appointment {id}");
-                TempData["ErrorMessage"] = "Error loading edit form";
-                return RedirectToAction(nameof(Index));
+                _logger.LogError(ex, "Error loading edit slot");
+                TempData["ErrorMessage"] = "Error loading slot";
+                return RedirectToAction(nameof(ManageAvailableSlots));
             }
         }
 
         [HttpPost]
+        [Authorize(Roles = "Doctor")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [FromForm] AppointmentVM appointmentVM)
+        public async Task<IActionResult> EditAvailableSlot(int id, AvailableSlotViewModel model)
         {
             try
             {
-                if (id != appointmentVM.AppointmentID)
+                var slot = await _availableSlotService.GetSlotByIdAsync(id);
+                if (slot == null)
                 {
-                    TempData["ErrorMessage"] = "Invalid appointment ID";
-                    return RedirectToAction(nameof(Index));
+                    TempData["ErrorMessage"] = "Slot not found";
+                    return RedirectToAction(nameof(ManageAvailableSlots));
+                }
+
+                var user = await _userManager.GetUserAsync(User);
+                if (user?.Id != slot.DoctorID)
+                {
+                    return Unauthorized();
                 }
 
                 if (!ModelState.IsValid)
                 {
-                    var doctors = await _userService.GetAllDoctorsAsync();
-                    ViewData["Doctors"] = doctors;
-                    return View(appointmentVM);
+                    return View(model);
                 }
 
-                var appointment = await _appointmentService.GetAppointmentByIdAsync(id);
-                if (appointment == null)
+                if (model.EndTime <= model.StartTime)
                 {
-                    TempData["ErrorMessage"] = "Appointment not found";
-                    return RedirectToAction(nameof(Index));
+                    ModelState.AddModelError("EndTime", "End time must be after start time");
+                    return View(model);
                 }
 
-                appointment.AppointmentDate = appointmentVM.AppointmentDate;
-                appointment.AppointmentTime = appointmentVM.AppointmentTime;
-                appointment.Status = appointmentVM.Status;
+                slot.Date = model.Date;
+                slot.StartTime = model.StartTime;
+                slot.EndTime = model.EndTime;
+                slot.MaxPatients = model.MaxPatients;
 
-                await _appointmentService.UpdateAppointmentAsync(appointment);
-                TempData["SuccessMessage"] = "Appointment updated successfully";
-                return RedirectToAction(nameof(Details), new { id });
+                await _availableSlotService.UpdateSlotAsync(slot);
+                TempData["SuccessMessage"] = "Slot updated successfully!";
+                return RedirectToAction(nameof(ManageAvailableSlots));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error updating appointment with ID {id}");
-                TempData["ErrorMessage"] = "Error updating appointment";
-                var doctors = await _userService.GetAllDoctorsAsync();
-                ViewData["Doctors"] = doctors;
-                return View(appointmentVM);
+                _logger.LogError(ex, "Error updating slot");
+                TempData["ErrorMessage"] = "Error updating slot";
+                return View(model);
             }
         }
 
-        public async Task<IActionResult> Cancel(int id)
+        [HttpPost]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> DeleteAvailableSlot(int id)
         {
             try
             {
-                var appointment = await _appointmentService.GetAppointmentByIdAsync(id);
-                if (appointment == null)
+                var slot = await _availableSlotService.GetSlotByIdAsync(id);
+                if (slot == null)
                 {
-                    TempData["ErrorMessage"] = "Appointment not found";
-                    return RedirectToAction(nameof(Index));
+                    TempData["ErrorMessage"] = "Slot not found";
+                    return RedirectToAction(nameof(ManageAvailableSlots));
                 }
-                return View(appointment);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error loading cancel confirmation for appointment {id}");
-                TempData["ErrorMessage"] = "Error loading cancel confirmation";
-                return RedirectToAction(nameof(Index));
-            }
-        }
 
-        [HttpPost, ActionName("Cancel")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CancelConfirmed(int id)
-        {
-            try
-            {
-                var result = await _appointmentService.CancelAppointmentAsync(id);
-                if (!result)
+                var user = await _userManager.GetUserAsync(User);
+                if (user?.Id != slot.DoctorID)
                 {
-                    TempData["ErrorMessage"] = "Appointment not found";
-                    return RedirectToAction(nameof(Index));
+                    return Unauthorized();
                 }
-                TempData["SuccessMessage"] = "Appointment cancelled successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error cancelling appointment with ID {id}");
-                TempData["ErrorMessage"] = "Error cancelling appointment";
-                return RedirectToAction(nameof(Index));
-            }
-        }
 
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                var appointment = await _appointmentService.GetAppointmentByIdAsync(id);
-                if (appointment == null)
-                {
-                    TempData["ErrorMessage"] = "Appointment not found";
-                    return RedirectToAction(nameof(Index));
-                }
-                return View(appointment);
+                await _availableSlotService.DeleteSlotAsync(id);
+                TempData["SuccessMessage"] = "Slot deleted successfully!";
+                return RedirectToAction(nameof(ManageAvailableSlots));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error loading delete confirmation for appointment {id}");
-                TempData["ErrorMessage"] = "Error loading delete confirmation";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            try
-            {
-                var result = await _appointmentService.DeleteAppointmentAsync(id);
-                if (!result)
-                {
-                    TempData["ErrorMessage"] = "Appointment not found";
-                    return RedirectToAction(nameof(Index));
-                }
-                TempData["SuccessMessage"] = "Appointment deleted successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error deleting appointment with ID {id}");
-                TempData["ErrorMessage"] = "Error deleting appointment";
-                return RedirectToAction(nameof(Index));
+                _logger.LogError(ex, "Error deleting slot");
+                TempData["ErrorMessage"] = "Error deleting slot";
+                return RedirectToAction(nameof(ManageAvailableSlots));
             }
         }
     }

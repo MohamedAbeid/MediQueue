@@ -14,6 +14,7 @@ namespace MediQueue.Models
         public DbSet<Clinic> Clinics { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Queue> Queues { get; set; }
+        public DbSet<DoctorAvailableSlot> DoctorAvailableSlots { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -57,6 +58,15 @@ namespace MediQueue.Models
 
             modelBuilder.Entity<Queue>()
                 .HasIndex(q => new { q.DoctorID, q.Position });
+
+            modelBuilder.Entity<DoctorAvailableSlot>()
+                .HasOne(s => s.Doctor)
+                .WithMany(u => u.AvailableSlots)
+                .HasForeignKey(s => s.DoctorID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DoctorAvailableSlot>()
+                .HasIndex(s => new { s.DoctorID, s.Date, s.StartTime });
         }
     }
 }

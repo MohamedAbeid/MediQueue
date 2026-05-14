@@ -1,0 +1,90 @@
+@model IEnumerable<MediQueue.Models.DoctorAvailableSlot>
+
+@{
+    ViewData["Title"] = "Manage Available Slots";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>إدارة المواعيد المتاحة</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="AddAvailableSlot" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> إضافة موعد متاح
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            لا توجد مواعيد متاحة. <a asp-action="AddAvailableSlot">أضف واحداً الآن</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>وقت البداية</th>
+                        <th>وقت النهاية</th>
+                        <th>الحد الأقصى للمرضى</th>
+                        <th>الحجوزات الحالية</th>
+                        <th>الأماكن المتاحة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var slot in Model)
+                    {
+                        <tr>
+                            <td>@slot.Date.ToString("yyyy-MM-dd")</td>
+                            <td>@slot.StartTime.ToString(@"hh\:mm")</td>
+                            <td>@slot.EndTime.ToString(@"hh\:mm")</td>
+                            <td>@slot.MaxPatients</td>
+                            <td>@slot.CurrentBookings</td>
+                            <td>@(slot.MaxPatients - @slot.CurrentBookings)</td>
+                            <td>
+                                <span class="badge bg-info">@slot.CurrentBookings</span>
+                            </td>
+                            <td>
+                                <span class="badge @(slot.MaxPatients - slot.CurrentBookings > 0 ? "bg-success" : "bg-danger")">
+                                    @(slot.MaxPatients - slot.CurrentBookings)
+                                </span>
+                            </td>
+                            <td>
+                                <a asp-action="EditAvailableSlot" asp-route-id="@slot.SlotID" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i> تعديل
+                                </a>
+                                <form asp-action="DeleteAvailableSlot" asp-route-id="@slot.SlotID" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد؟')">
+                                        <i class="bi bi-trash"></i> حذف
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
