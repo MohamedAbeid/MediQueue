@@ -1,70 +1,75 @@
 @model MediQueue.Models.Clinic
-
 @{
-    ViewData["Title"] = "Clinic Details";
+    ViewData["Title"] = "تفاصيل العيادة";
 }
 
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-8">
-            <h1>@Model.Name</h1>
-            <hr />
-
-            <div class="card">
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-3"><strong>بطاقة تعريف</strong></div>
-                        <div class="col-md-9">@Model.ClinicID</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3"><strong>العنوان</strong></div>
-                        <div class="col-md-9">@Model.Address</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3"><strong>الهاتف</strong></div>
-                        <div class="col-md-9">@Model.PhoneNumber</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3"><strong>الدكاترة</strong></div>
-                        <div class="col-md-9">
-                            @if (Model.Doctors != null && Model.Doctors.Count() > 0)
-                            {
-                                <ul class="list-group">
-                                    @foreach (var doctor in Model.Doctors)
-                                    {
-                                        <li class="list-group-item">
-                                            <strong>@doctor.FullName</strong>
-                                            @if (!string.IsNullOrEmpty(doctor.Specialty))
-                                            {
-                                                <br />
-                                                <small class="text-muted">Specialty: @doctor.Specialty</small>
-                                            }
-                                        </li>
-                                    }
-                                </ul>
-                            }
-                            else
-                            {
-                                <span class="text-muted">لا يوجد دكاترة معينين</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container fade-in" style="padding-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 class="section-title" style="margin: 0;">تفاصيل العيادة</h1>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.ClinicID" class="btn btn-primary">تعديل</a>
+            <a asp-action="Index" class="btn btn-outline">الرجوع للقائمة</a>
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-8">
-            <a asp-action="Edit" asp-route-id="@Model.ClinicID" class="btn btn-warning">
-                <i class="bi bi-pencil"></i> تعديل
-            </a>
-            <a asp-action="Delete" asp-route-id="@Model.ClinicID" class="btn btn-danger">
-                <i class="bi bi-trash"></i> حذف
-            </a>
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> الرجوع إلي الخلف
-            </a>
+    <div class="grid grid-cols-4" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+        <div class="card" style="grid-column: span 1;">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">معلومات العيادة</h3>
+            
+            <div style="margin-bottom: 1.25rem;">
+                <div class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.25rem;">رقم العيادة</div>
+                <div style="font-weight: 700;">#@Model.ClinicID</div>
+            </div>
+            
+            <div style="margin-bottom: 1.25rem;">
+                <div class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.25rem;">اسم العيادة</div>
+                <div style="font-weight: 700; font-size: 1.1rem; color: var(--primary);">@Model.Name</div>
+            </div>
+            
+            <div style="margin-bottom: 1.25rem;">
+                <div class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.25rem;">العنوان</div>
+                <div>@Model.Address</div>
+            </div>
+            
+            <div style="margin-bottom: 1.25rem;">
+                <div class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.25rem;">رقم الهاتف</div>
+                <div dir="ltr" style="text-align: end; font-weight: 600;">@Model.PhoneNumber</div>
+            </div>
+        </div>
+
+        <div class="card" style="grid-column: span 2;">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">الأطباء المسجلين</h3>
+            
+            @if (Model.Doctors != null && Model.Doctors.Any())
+            {
+                <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+                    @foreach (var doctor in Model.Doctors)
+                    {
+                        <div style="padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; gap: 1rem;">
+                            <img src="@(doctor.ProfileImagePath ?? "/images/default-doctor.png")" 
+                                 alt="@doctor.FullName" 
+                                 style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border);"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=@(System.Net.WebUtility.UrlEncode(doctor.FullName ?? "Dr"))&background=4f46e5&color=fff&size=100'" />
+                            <div>
+                                <div style="font-weight: 700;">@doctor.FullName</div>
+                                <div class="text-secondary" style="font-size: 0.85rem;">@doctor.Specialty</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem; opacity: 0.5;">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <div>لا يوجد أطباء مسجلين في هذه العيادة</div>
+                </div>
+            }
         </div>
     </div>
 </div>

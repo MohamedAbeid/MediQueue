@@ -18,6 +18,14 @@ namespace MediQueue.Controllers
 
         public async Task<IActionResult> Index()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                if (User.IsInRole("Admin"))
+                    return RedirectToAction("Index", "Admin");
+                if (User.IsInRole("Doctor"))
+                    return RedirectToAction("Dashboard", "Doctor");
+            }
+
             var clinics = await _clinicService.GetAllClinicsAsync();
             var doctors = await _userService.GetAllDoctorsAsync();
 

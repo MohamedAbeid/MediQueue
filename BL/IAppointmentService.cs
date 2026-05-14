@@ -15,5 +15,6 @@ namespace MediQueue.BL
         Task<bool> CancelAppointmentAsync(int appointmentId);
         Task<IEnumerable<Appointment>> GetUpcomingAppointmentsAsync(string userId);
         Task<bool> IsTimeSlotAvailableAsync(string doctorId, DateTime date, TimeSpan time);
+
     }
 }

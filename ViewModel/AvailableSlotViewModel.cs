@@ -25,6 +25,7 @@ namespace MediQueue.ViewModel
         public string DoctorID { get; set; }
         public string DoctorName { get; set; }
 
+        public int CurrentBookings { get; set; }
         public int AvailableSlotsCount { get; set; }
     }
 }

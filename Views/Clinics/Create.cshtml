@@ -1,54 +1,48 @@
 @model MediQueue.ViewModel.ClinicVM
-
 @{
-    ViewData["Title"] = "Create Clinic";
+    ViewData["Title"] = "إنشاء عيادة جديدة";
 }
 
-<div class="container mt-5 mb-5">
-    <div class="row">
-        <div class="col-lg-5 mx-auto">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-5">
-                    <h1 class="card-title fw-bold mb-2 text-primary">
-                        <i class="bi bi-hospital"></i> إنشاء عيادة جديدة
-                    </h1>
-                    <hr class="mb-4" />
+<div class="container fade-in" style="max-width: 600px; padding-top: 2rem;">
+    <div class="card">
+        <h1 class="section-title" style="margin-top: 0; text-align: center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-inline-end: 0.5rem;"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
+            إنشاء عيادة جديدة
+        </h1>
+        <hr style="border: none; border-top: 1px solid var(--border); margin-block: 1rem 1.5rem;" />
 
-                    <form asp-action="Create" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>Please fix the following errors:</strong>
-                        </div>
-
-                        <div class="mb-4">
-                            <label asp-for="Name" class="form-label fw-semibold text-dark">اسم العيادة</label>
-                            <input asp-for="Name" class="form-control form-control-lg rounded-3" placeholder="أدخل اسم العيادة" />
-                            <span asp-validation-for="Name" class="text-danger small d-block mt-2"></span>
-                        </div>
-
-                        <div class="mb-4">
-                            <label asp-for="Address" class="form-label fw-semibold text-dark">عنوان العيادة</label>
-                            <input asp-for="Address" class="form-control form-control-lg rounded-3" placeholder="ادخل عنوان العيادة" />
-                            <span asp-validation-for="Address" class="text-danger small d-block mt-2"></span>
-                        </div>
-
-                        <div class="mb-4">
-                            <label asp-for="PhoneNumber" class="form-label fw-semibold text-dark">رقم الهاتف</label>
-                            <input asp-for="PhoneNumber" class="form-control form-control-lg rounded-3" placeholder="ادخل رقم الهاتف" />
-                            <span asp-validation-for="PhoneNumber" class="text-danger small d-block mt-2"></span>
-                        </div>
-
-                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-between pt-3">
-                            <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
-                                <i class="bi bi-plus-circle me-2"></i>إنشاء العيادة
-                            </button>
-                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg rounded-3 fw-semibold">
-                                <i class="bi bi-x-circle me-2"></i>إلغاء
-                            </a>
-                        </div>
-                    </form>
-                </div>
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert">
+                <strong>الرجاء تصحيح الأخطاء التالية:</strong>
             </div>
-        </div>
+
+            <div class="form-group">
+                <label asp-for="Name" class="form-label">اسم العيادة</label>
+                <input asp-for="Name" class="form-input" placeholder="أدخل اسم العيادة" />
+                <span asp-validation-for="Name" class="form-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Address" class="form-label">عنوان العيادة</label>
+                <input asp-for="Address" class="form-input" placeholder="ادخل عنوان العيادة" />
+                <span asp-validation-for="Address" class="form-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="PhoneNumber" class="form-label">رقم الهاتف</label>
+                <input asp-for="PhoneNumber" class="form-input" placeholder="ادخل رقم الهاتف" dir="ltr" />
+                <span asp-validation-for="PhoneNumber" class="form-error"></span>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    إنشاء العيادة
+                </button>
+                <a asp-action="Index" class="btn btn-outline" style="flex: 1;">
+                    إلغاء
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 

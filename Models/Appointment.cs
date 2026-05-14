@@ -16,5 +16,7 @@
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Booked;
 
         public Queue Queue { get; set; }
+
+       
     }
 }

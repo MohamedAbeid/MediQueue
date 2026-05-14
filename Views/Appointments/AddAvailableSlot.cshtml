@@ -1,72 +1,67 @@
 @model MediQueue.ViewModel.AvailableSlotViewModel
 
 @{
-    ViewData["Title"] = "Add Available Slot";
+    ViewData["Title"] = "إضافة موعد متاح";
 }
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-8 offset-md-2">
-            <h1>إضافة موعد متاح</h1>
+            <h1>إضافة موعد متاح جديد</h1>
             <hr />
 
-            
-            @if (TempData["ErrorMessage"] != null)
+            @if (ViewData.ModelState.Values.SelectMany(v => v.Errors).Any())
             {
-                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                <div class="alert alert-danger">
+                    <h5>أخطاء في النموذج:</h5>
+                    <ul>
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
             }
 
-            <form asp-action="AddAvailableSlot" method="post">
-                @Html.AntiForgeryToken() 
-                
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
-                <div class="row">
+            <form asp-action="AddAvailableSlot" method="post" class="needs-validation">
+                <div class="row mb-3">
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Date" class="form-label">التاريخ</label>
-                            <input asp-for="Date" type="date" class="form-control"
-                                   min="@DateTime.Now.ToString("yyyy-MM-dd")" />  @* ← منع past dates من الـ UI *@
-                            <span asp-validation-for="Date" class="text-danger"></span>
-                        </div>
+                        <label asp-for="Date" class="form-label">التاريخ *</label>
+                        <input asp-for="Date" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                        <span asp-validation-for="Date" class="text-danger d-block mt-1"></span>
                     </div>
                 </div>
 
-                <div class="row">
+                <div class="row mb-3">
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="StartTime" class="form-label">وقت البداية</label>
-                            <input asp-for="StartTime" type="time" class="form-control" />
-                            <span asp-validation-for="StartTime" class="text-danger"></span>
-                        </div>
+                        <label asp-for="StartTime" class="form-label">وقت البداية *</label>
+                        <input asp-for="StartTime" type="time" class="form-control" required />
+                        <span asp-validation-for="StartTime" class="text-danger d-block mt-1"></span>
                     </div>
+
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="EndTime" class="form-label">وقت النهاية</label>
-                            <input asp-for="EndTime" type="time" class="form-control" />
-                            <span asp-validation-for="EndTime" class="text-danger"></span>
-                        </div>
+                        <label asp-for="EndTime" class="form-label">وقت النهاية *</label>
+                        <input asp-for="EndTime" type="time" class="form-control" required />
+                        <span asp-validation-for="EndTime" class="text-danger d-block mt-1"></span>
                     </div>
                 </div>
 
-                <div class="row">
+                <div class="row mb-3">
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="MaxPatients" class="form-label">الحد الأقصى للمرضى</label>
-                            <input asp-for="MaxPatients" type="number" class="form-control" min="1" max="50" />
-                            <small class="form-text text-muted">يجب أن يكون بين 1 و 50</small>
-                            <span asp-validation-for="MaxPatients" class="text-danger"></span>
-                        </div>
+                        <label asp-for="MaxPatients" class="form-label">الحد الأقصى للمرضى *</label>
+                        <input asp-for="MaxPatients" type="number" class="form-control" min="1" max="50" required />
+                        <small class="form-text text-muted d-block mt-1">يجب أن يكون بين 1 و 50</small>
+                        <span asp-validation-for="MaxPatients" class="text-danger d-block mt-1"></span>
                     </div>
                 </div>
 
                 <hr />
 
                 <div class="mb-3">
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-success btn-lg">
                         <i class="bi bi-check-circle"></i> إضافة الموعد
                     </button>
-                    <a asp-action="ManageAvailableSlots" class="btn btn-secondary">
+                    <a asp-action="ManageAvailableSlots" class="btn btn-secondary btn-lg">
                         <i class="bi bi-x-circle"></i> إلغاء
                     </a>
                 </div>
@@ -74,3 +69,9 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

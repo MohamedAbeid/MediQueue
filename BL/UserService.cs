@@ -36,6 +36,7 @@ namespace MediQueue.BL
             {
                 return await _context.Users
                     .Include(u => u.Clinic)
+                    .Include(u => u.AvailableSlots)
                     .FirstOrDefaultAsync(u => u.Id == userId);
             }
             catch (Exception ex)

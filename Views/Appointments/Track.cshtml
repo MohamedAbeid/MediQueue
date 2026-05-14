@@ -1,0 +1,257 @@
+@model MediQueue.Models.Appointment
+@{
+    ViewData["Title"] = "تتبع الموعد";
+}
+
+<style>
+    .track-container {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+
+    .track-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .track-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .track-header h2 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+    }
+
+    .track-header .booking-id {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .track-status {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(99, 102, 241, 0.04));
+        border-radius: var(--radius-lg);
+    }
+
+    .position-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), #818cf8);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+        box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+    }
+
+    .position-circle small {
+        font-size: 0.7rem;
+        font-weight: 600;
+        opacity: 0.85;
+    }
+
+    .queue-info {
+        text-align: center;
+    }
+
+    .queue-info .label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .queue-info .value {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .track-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .track-detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .track-detail-item .label {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .track-detail-item .value {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .track-actions {
+        display: flex;
+        gap: 0.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .track-actions .btn {
+        flex: 1;
+    }
+
+    .status-active {
+        display: inline-block;
+        padding: 0.3rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: rgba(16, 185, 129, 0.12);
+        color: #059669;
+    }
+
+    .status-done {
+        background: rgba(107, 114, 128, 0.12);
+        color: #6b7280;
+    }
+
+    .pulse-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        margin-inline-end: 0.4rem;
+        animation: pulse 1.5s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    @@media (max-width: 600px) {
+        .track-details {
+            grid-template-columns: 1fr;
+        }
+        .track-card {
+            padding: 1.25rem;
+        }
+    }
+</style>
+
+<div class="container fade-in">
+    <div class="track-container">
+        <div class="track-card">
+
+            <div class="track-header">
+                <h2>تتبع موعدك</h2>
+                <span class="booking-id">رقم الحجز: #@Model.AppointmentID</span>
+            </div>
+
+            <div class="track-status">
+                <div class="position-circle">
+                    <span id="positionNumber">-</span>
+                    <small>ترتيبك</small>
+                </div>
+
+                <div style="display: flex; gap: 2rem; text-align: center;">
+                    <div class="queue-info">
+                        <div class="label">أشخاص قبلك</div>
+                        <div class="value" id="peopleAhead">-</div>
+                    </div>
+                    <div class="queue-info">
+                        <div class="label">الوقت المتوقع</div>
+                        <div class="value" id="estimatedTime">-</div>
+                    </div>
+                </div>
+
+                <div id="queueStatus">
+                    <span class="pulse-dot"></span>
+                    <span class="status-active">في الطابور</span>
+                </div>
+            </div>
+
+            <div class="track-details">
+                <div class="track-detail-item">
+                    <span class="label">الطبيب</span>
+                    <span class="value">@Model.Doctor?.FullName</span>
+                </div>
+                <div class="track-detail-item">
+                    <span class="label">التخصص</span>
+                    <span class="value">@Model.Doctor?.Specialty</span>
+                </div>
+                <div class="track-detail-item">
+                    <span class="label">التاريخ</span>
+                    <span class="value">@Model.AppointmentDate.ToString("yyyy-MM-dd")</span>
+                </div>
+                <div class="track-detail-item">
+                    <span class="label">الوقت</span>
+                    <span class="value">@Model.AppointmentTime.ToString(@"hh\:mm")</span>
+                </div>
+            </div>
+
+            <div class="track-actions">
+                <a href="@Url.Action("MyAppointments", "Appointments")" class="btn btn-primary">
+                    مواعيدي
+                </a>
+                <form asp-action="Cancel" method="post" style="flex:1">
+                    <input type="hidden" name="id" value="@Model.AppointmentID" />
+                    <button type="submit"
+                            class="btn btn-danger-outline btn-block"
+                            onclick="return confirm('هل أنت متأكد من إلغاء الموعد؟')">
+                        إلغاء الموعد
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateQueueStatus() {
+            fetch('/Appointments/GetQueueStatus/@Model.AppointmentID')
+                .then(res => {
+                    if (!res.ok) return null;
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return;
+
+                    document.getElementById('positionNumber').textContent = data.position;
+                    document.getElementById('peopleAhead').textContent = data.peopleAhead;
+                    document.getElementById('estimatedTime').textContent = data.estimatedTime;
+
+                    const statusEl = document.getElementById('queueStatus');
+                    if (!data.isActive) {
+                        statusEl.innerHTML = '<span class="status-active status-done">تم الانتهاء</span>';
+                    }
+                })
+                .catch(err => console.error('Error fetching queue status:', err));
+        }
+
+        // Initial load
+        updateQueueStatus();
+
+        // Poll every 10 seconds
+        setInterval(updateQueueStatus, 10000);
+    </script>
+}

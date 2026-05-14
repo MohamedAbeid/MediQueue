@@ -1,48 +1,55 @@
 @model IEnumerable<MediQueue.Models.User>
 
 @{
-    ViewData["Title"] = "Doctors by Clinic";
+    ViewData["Title"] = "أطباء العيادة";
 }
 
-<div class="container mt-5">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>Doctors - @ViewData["ClinicName"]</h1>
-        </div>
-        <div class="col-md-4 text-end">
-            <a asp-action="Doctors" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back
-            </a>
-        </div>
+<div class="container fade-in" style="padding-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <h1 class="section-title" style="margin: 0;">الأطباء - @ViewData["ClinicName"]</h1>
+        <a asp-action="Doctors" class="btn btn-outline">
+            الرجوع للقائمة
+        </a>
     </div>
 
-    @if (Model.Count() == 0)
+    @if (!Model.Any())
     {
-        <div class="alert alert-info">
-            No doctors found in this clinic.
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted); margin-bottom:1rem">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <h3 style="color:var(--text-secondary); margin-bottom: 0.5rem">لا يوجد أطباء</h3>
+            <p style="color:var(--text-muted);">لا يوجد أطباء مسجلين في هذه العيادة حالياً.</p>
         </div>
     }
     else
     {
-        <div class="row">
+        <div class="grid grid-cols-4" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
             @foreach (var doctor in Model)
             {
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">@doctor.FullName</h5>
-                            <p class="card-text">
-                                <strong>Specialty:</strong> @(doctor.Specialty ?? "Not specified")<br />
-                                <strong>Email:</strong> @doctor.Email<br />
-                                <strong>Phone:</strong> @doctor.PhoneNumber
-                            </p>
+                <div class="card doctor-card" style="padding: 1.5rem; text-align: center;">
+                    <img src="@(doctor.ProfileImagePath ?? "/images/default-doctor.png")" 
+                         alt="@doctor.FullName" 
+                         style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--border); margin: 0 auto 1rem;"
+                         onerror="this.src='https://ui-avatars.com/api/?name=@(System.Net.WebUtility.UrlEncode(doctor.FullName ?? "Dr"))&background=4f46e5&color=fff&size=200'" />
+                    
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;">@doctor.FullName</h3>
+                    <div style="color: var(--primary); font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem;">
+                        @(doctor.Specialty ?? "غير محدد")
+                    </div>
+                    
+                    <div style="text-align: start; font-size: 0.9rem; margin-bottom: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-secondary"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            <span dir="ltr">@doctor.Email</span>
                         </div>
-                        <div class="card-footer">
-                            <a asp-action="Details" asp-route-id="@doctor.Id" class="btn btn-sm btn-info">
-                                <i class="bi bi-eye"></i> View
-                            </a>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-secondary"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <span dir="ltr">@doctor.PhoneNumber</span>
                         </div>
                     </div>
+                    
+                    <a asp-action="Details" asp-route-id="@doctor.Id" class="btn btn-primary btn-block mt-auto">عرض التفاصيل</a>
                 </div>
             }
         </div>

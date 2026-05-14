@@ -1,4 +1,4 @@
-﻿using MediQueue.Models;
+using MediQueue.Models;
 using MediQueue.ViewModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -76,6 +76,17 @@ namespace MediQueue.Controllers
                     if (found)
                     {
                         await signInManger.SignInAsync(userModel, userViewModel.RememberMe);
+                        
+                        var roles = await userManager.GetRolesAsync(userModel);
+                        if (roles.Contains("Admin"))
+                        {
+                            return RedirectToAction("Index", "Admin");
+                        }
+                        else if (roles.Contains("Doctor"))
+                        {
+                            return RedirectToAction("Dashboard", "Doctor");
+                        }
+                        
                         return RedirectToAction("Index", "Home");
                     }
                 }

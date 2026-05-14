@@ -1,0 +1,354 @@
+@model MediQueue.ViewModel.AppointmentVM
+
+@{
+    ViewData["Title"] = "تأكيد الحجز";
+
+    var doctor = ViewData["Doctor"] as MediQueue.Models.User;
+
+    var slots = ViewBag.Slots as List<MediQueue.Models.DoctorAvailableSlot>
+            ?? new List<MediQueue.Models.DoctorAvailableSlot>();
+}
+
+<style>
+    .booking-layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .booking-summary {
+        position: sticky;
+        top: 6rem;
+    }
+
+    .summary-doctor {
+        display: flex;
+        gap: 1rem;
+        margin-block-end: 1.5rem;
+        padding-block-end: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .summary-doctor img {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius);
+            object-fit: cover;
+        }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-block-end: 0.85rem;
+        font-weight: 600;
+    }
+
+    .time-slot {
+        padding: 0.65rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        text-align: center;
+        cursor: pointer;
+        transition: var(--transition);
+        font-weight: 700;
+        background: var(--surface);
+    }
+
+        .time-slot:hover {
+            border-color: var(--primary);
+        }
+
+        .time-slot.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+    .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.65rem;
+        margin-block-end: 1.5rem;
+    }
+
+    @@media (max-width: 900px) {
+        .booking-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .booking-summary {
+            position: static;
+            order: -1;
+        }
+    }
+</style>
+
+<div class="container fade-in">
+
+    <div class="booking-layout">
+
+        <!-- Form Section -->
+        <div class="card">
+
+            <h2 class="section-title" style="margin-top:0">
+                بيانات المريض
+            </h2>
+
+            <form asp-action="Book" method="post" id="bookingForm">
+
+                <input type="hidden" asp-for="DoctorID" />
+                <input type="hidden" asp-for="DoctorName" />
+                <input type="hidden" asp-for="PatientID" />
+                <input type="hidden" asp-for="AppointmentDate" />
+
+                <input type="hidden"
+                       asp-for="AppointmentTime"
+                       id="AppointmentTimeInput" />
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <div asp-validation-summary="All"
+                             class="text-danger mb-0">
+                        </div>
+                    </div>
+                }
+                <div class="form-group">
+                    <label>اختار التاريخ</label>
+
+                    <select id="dateSelect" class="form-control">
+                        <option value="">اختر تاريخ</option>
+
+                        @foreach (var date in ViewBag.Dates)
+                        {
+                            <option value="@date.ToString("yyyy-MM-dd")">
+                                @date.ToString("dd/MM/yyyy")
+                            </option>
+                        }
+                    </select>
+                </div>
+                <!-- Available Slots -->
+                <div class="form-group">
+
+                    <label class="form-label">
+                        الوقت المتاح
+                    </label>
+
+                    <div class="slots-grid" id="slotsContainer">
+                        @foreach (var slot in slots)
+                        {
+                            <div class="time-slot" data-time="@slot.StartTime">
+                                <div>
+                                    @slot.Date.ToString("dd/MM/yyyy")
+                                </div>
+
+                                <div>
+                                    @slot.StartTime.ToString(@"hh\:mm")
+                                    -
+                                    @slot.EndTime.ToString(@"hh\:mm")
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+
+                <!-- Patient Name -->
+                <div class="form-group">
+
+                    <label class="form-label"
+                           asp-for="PatientName">
+                    </label>
+
+                    <input class="form-input"
+                           asp-for="PatientName"
+                           placeholder="كما يظهر في الهوية" />
+
+                    <span asp-validation-for="PatientName"
+                          class="form-error">
+                    </span>
+
+                </div>
+
+                <!-- Submit -->
+                <button type="submit"
+                        class="btn btn-primary btn-block btn-lg mt-4"
+                        id="submitBtn">
+
+                    تأكيد الحجز والدفع بالعيادة
+
+                </button>
+
+            </form>
+
+        </div>
+
+        <!-- Summary -->
+        <div class="card booking-summary">
+
+            <h2 class="section-title" style="margin-top:0">
+                ملخص الحجز
+            </h2>
+
+            <div class="summary-doctor">
+
+                <img src="@(doctor?.ProfileImagePath ?? "https://via.placeholder.com/150")"
+                     alt="@doctor?.FullName" />
+
+                <div>
+
+                    <h3 style="margin-block-end:0.25rem">
+                        @doctor?.FullName
+                    </h3>
+
+                    <div class="text-secondary"
+                         style="font-size:0.9rem">
+
+                        @doctor?.Specialty
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="summary-item">
+
+                <span class="text-secondary">
+                    تاريخ الموعد
+                </span>
+
+                <span>
+                    @Model.AppointmentDate.ToString("yyyy-MM-dd")
+                </span>
+
+            </div>
+
+            <div class="summary-item">
+
+                <span class="text-secondary">
+                    الوقت المختار
+                </span>
+
+                <span id="summaryTime">
+                    @(ViewData["SelectedTime"] ?? "لم يتم الاختيار")
+                </span>
+
+            </div>
+
+            <div style="
+                margin-top:1.5rem;
+                padding-top:1rem;
+                border-top:1px dashed var(--border);
+                font-size:0.85rem;
+                color:var(--text-muted);
+                text-align:center">
+
+                يتم دفع الرسوم في العيادة.
+                الرجاء الحضور قبل الموعد بـ 15 دقيقة.
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <script>
+
+        document.querySelectorAll('.time-slot').forEach(slot => {
+
+            slot.addEventListener('click', function() {
+
+                document.querySelectorAll('.time-slot')
+                    .forEach(s => s.classList.remove('active'));
+
+                this.classList.add('active');
+
+                const time = this.getAttribute('data-time');
+
+                document.getElementById('AppointmentTimeInput').value = time;
+
+                document.getElementById('summaryTime').textContent =
+                    this.innerText.replace(/\n/g, ' ');
+
+            });
+
+        });
+
+        document.getElementById('bookingForm')
+            .addEventListener('submit', function(e) {
+
+                const time =
+                    document.getElementById('AppointmentTimeInput').value;
+
+                if (!time || time === '00:00:00') {
+
+                    e.preventDefault();
+
+                    alert('الرجاء اختيار وقت الموعد أولاً.');
+
+                }
+
+            });
+
+    </script>
+   
+<script>
+
+document.getElementById('dateSelect').addEventListener('change', function () {
+
+    const date = this.value;
+    const doctorId = '@Model.DoctorID';
+
+    if (!date) return;
+
+    // Update the hidden AppointmentDate field
+    document.getElementById('AppointmentDate').value = date;
+
+    // Update the summary display
+    document.querySelector('.summary-item span:last-child').textContent = date;
+
+    fetch(`/Appointments/GetSlots?doctorId=${doctorId}&date=${date}`)
+        .then(res => res.json())
+        .then(data => {
+
+            let html = '';
+
+            data.forEach(slot => {
+                html += `
+                    <div class="time-slot" data-time="${slot.time}">
+                        ${slot.display}
+                    </div>
+                `;
+            });
+
+            document.getElementById('slotsContainer').innerHTML = html;
+
+            attachSlotEvents();
+        });
+});
+
+function attachSlotEvents() {
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        slot.addEventListener('click', function () {
+
+            document.querySelectorAll('.time-slot')
+                .forEach(s => s.classList.remove('active'));
+
+            this.classList.add('active');
+
+            document.getElementById('AppointmentTimeInput').value =
+                this.getAttribute('data-time');
+        });
+    });
+}
+
+</script>
+
+
+}

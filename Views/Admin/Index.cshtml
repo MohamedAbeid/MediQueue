@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = "لوحة التحكم";
+    var recentAppointments = ViewBag.RecentAppointments as IEnumerable<MediQueue.Models.Appointment>;
+}
+
+<div class="container fade-in" style="padding-top: 2rem;">
+    <div style="margin-bottom: 2rem;">
+        <h1 class="section-title" style="margin: 0; font-size: 1.5rem;">نظرة عامة على النظام</h1>
+        <p class="text-muted">مرحباً بك في لوحة تحكم الإدارة. إليك إحصائيات النظام اليوم.</p>
+    </div>
+
+    <!-- الإحصائيات -->
+    <div class="grid grid-cols-4" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 2.5rem;">
+        
+        <!-- إجمالي المستخدمين -->
+        <div class="card" style="display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.5rem;">
+            <div style="background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+                <div class="text-secondary" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem;">المستخدمين</div>
+                <div style="font-size: 1.5rem; font-weight: 800; line-height: 1;">@ViewBag.TotalUsers</div>
+            </div>
+        </div>
+
+        <!-- الأطباء -->
+        <div class="card" style="display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.5rem;">
+            <div style="background: color-mix(in srgb, var(--secondary) 12%, transparent); color: var(--secondary); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            </div>
+            <div>
+                <div class="text-secondary" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem;">الأطباء</div>
+                <div style="font-size: 1.5rem; font-weight: 800; line-height: 1;">@ViewBag.TotalDoctors</div>
+            </div>
+        </div>
+
+        <!-- العيادات -->
+        <div class="card" style="display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.5rem;">
+            <div style="background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+            <div>
+                <div class="text-secondary" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem;">العيادات</div>
+                <div style="font-size: 1.5rem; font-weight: 800; line-height: 1;">@ViewBag.TotalClinics</div>
+            </div>
+        </div>
+
+        <!-- الحجوزات -->
+        <div class="card" style="display: flex; flex-direction: row; align-items: center; gap: 1rem; padding: 1.5rem;">
+            <div style="background: color-mix(in srgb, #6366f1 12%, transparent); color: #6366f1; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div>
+                <div class="text-secondary" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem;">إجمالي الحجوزات</div>
+                <div style="font-size: 1.5rem; font-weight: 800; line-height: 1;">@ViewBag.TotalAppointments</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- أحدث الحجوزات -->
+    <div class="card" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.2rem; margin: 0; font-weight: 800;">أحدث الحجوزات</h2>
+            <a asp-controller="Appointments" asp-action="Index" class="btn btn-sm btn-outline">عرض الكل</a>
+        </div>
+
+        @if (recentAppointments != null && recentAppointments.Any())
+        {
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center;">رقم</th>
+                            <th>المريض</th>
+                            <th>الطبيب</th>
+                            <th style="text-align: center;">التاريخ</th>
+                            <th style="text-align: center;">الوقت</th>
+                            <th style="text-align: center;">الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var apt in recentAppointments)
+                        {
+                            <tr>
+                                <td style="text-align: center; font-weight: 700; color: var(--text-muted);">#@apt.AppointmentID</td>
+                                <td style="font-weight: 600;">@apt.Patient</td>
+                                <td style="color: var(--primary); font-weight: 600;">@apt.Doctor?.FullName</td>
+                                <td style="text-align: center;" dir="ltr">@apt.AppointmentDate.ToString("yyyy-MM-dd")</td>
+                                <td style="text-align: center;" dir="ltr">@apt.AppointmentTime.ToString(@"hh\:mm")</td>
+                                <td style="text-align: center;">
+                                    @if (apt.Status == MediQueue.Models.AppointmentStatus.Booked)
+                                    {
+                                        <span class="status-badge status-booked">محجوز</span>
+                                    }
+                                    else if (apt.Status == MediQueue.Models.AppointmentStatus.Completed)
+                                    {
+                                        <span class="status-badge status-completed">مكتمل</span>
+                                    }
+                                    else if (apt.Status == MediQueue.Models.AppointmentStatus.Cancelled)
+                                    {
+                                        <span class="status-badge status-cancelled">ملغي</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem; opacity: 0.5;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <div style="font-weight: 600;">لا توجد حجوزات مسجلة في النظام.</div>
+            </div>
+        }
+    </div>
+</div>
