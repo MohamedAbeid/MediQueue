@@ -31,6 +31,7 @@ namespace MediQueue.Models
                     UserName = adminEmail,
                     Email = adminEmail,
                     FullName = "MohamedAbeid",
+                    PasswordHash = "MohamedAbeid",
                     PhoneNumber = "01000000000"
 
                 };

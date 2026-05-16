@@ -314,7 +314,7 @@ namespace MediQueue.Controllers
                 return NotFound();
 
             var slots = doctor.AvailableSlots
-                .Where(s => s.Date.Date == date.Date && s.IsActive)
+                .Where(s => s.Date.Date == date.Date && s.IsActive && s.CurrentBookings < s.MaxPatients)
                 .Select(s => new
                 {
                     time = s.StartTime.ToString(@"hh\:mm"),
@@ -337,7 +337,7 @@ namespace MediQueue.Controllers
 
             // 👇 نجيب التواريخ فقط بدون تكرار
             var dates = doctor.AvailableSlots
-                .Where(s => s.IsActive && s.Date.Date >= DateTime.Today)
+                .Where(s => s.IsActive && s.Date.Date >= DateTime.Today && s.CurrentBookings < s.MaxPatients)
                 .Select(s => s.Date.Date)
                 .Distinct()
                 .OrderBy(d => d)
@@ -345,7 +345,7 @@ namespace MediQueue.Controllers
 
             ViewBag.Dates = dates;
             ViewBag.Slots = doctor.AvailableSlots
-                .Where(s => s.IsActive && s.Date.Date >= DateTime.Today)
+                .Where(s => s.IsActive && s.Date.Date >= DateTime.Today && s.CurrentBookings < s.MaxPatients)
                 .OrderBy(s => s.Date).ThenBy(s => s.StartTime)
                 .ToList();
 
@@ -371,16 +371,28 @@ namespace MediQueue.Controllers
             var doctor = await _userService.GetUserByIdAsync(model.DoctorID);
             ViewData["Doctor"] = doctor;
 
+            // Check if the slot is still available
+            var selectedSlot = await _context.DoctorAvailableSlots
+                .FirstOrDefaultAsync(s => s.DoctorID == model.DoctorID &&
+                                          s.Date.Date == model.AppointmentDate.Date &&
+                                          s.StartTime == model.AppointmentTime &&
+                                          s.IsActive);
+
+            if (selectedSlot == null || selectedSlot.CurrentBookings >= selectedSlot.MaxPatients)
+            {
+                ModelState.AddModelError("", "عذراً، هذا الموعد لم يعد متاحاً (اكتمل العدد).");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Dates = doctor?.AvailableSlots?
-                    .Where(s => s.IsActive && s.Date.Date >= DateTime.Today)
+                    .Where(s => s.IsActive && s.Date.Date >= DateTime.Today && s.CurrentBookings < s.MaxPatients)
                     .Select(s => s.Date.Date)
                     .Distinct()
                     .OrderBy(d => d)
                     .ToList() ?? new List<DateTime>();
                 ViewBag.Slots = doctor?.AvailableSlots?
-                    .Where(s => s.IsActive && s.Date.Date >= DateTime.Today)
+                    .Where(s => s.IsActive && s.Date.Date >= DateTime.Today && s.CurrentBookings < s.MaxPatients)
                     .OrderBy(s => s.Date).ThenBy(s => s.StartTime)
                     .ToList() ?? new List<DoctorAvailableSlot>();
                 return View(model);

@@ -2,6 +2,7 @@ using MediQueue.BL;
 using MediQueue.Models;
 using MediQueue.ViewModel;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediQueue.Controllers
@@ -11,12 +12,14 @@ namespace MediQueue.Controllers
         private readonly IUserService _userService;
         private readonly IClinicService _clinicService;
         private readonly ILogger<UsersController> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public UsersController(IUserService userService, IClinicService clinicService, ILogger<UsersController> logger)
+        public UsersController(IUserService userService, IClinicService clinicService, ILogger<UsersController> logger, IWebHostEnvironment webHostEnvironment)
         {
             _userService = userService;
             _clinicService = clinicService;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -297,8 +300,8 @@ namespace MediQueue.Controllers
                         return View(model);
                     }
 
-                    // إنشاء مجلد للصور إذا لم يكن موجوداً
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "doctors");
+                    // المسار الصحيح لحفظ الملفات داخل مجلد الويب
+                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "doctors");
                     if (!Directory.Exists(uploadsFolder))
                     {
                         Directory.CreateDirectory(uploadsFolder);
@@ -313,7 +316,8 @@ namespace MediQueue.Controllers
                         await model.ProfileImage.CopyToAsync(fileStream);
                     }
 
-                    profileImagePath = Path.Combine("/uploads/doctors", uniqueFileName);
+                    // الرابط الذي سيفهمه المتصفح (نسبةً إلى مجلد wwwroot)
+                    profileImagePath = "/uploads/doctors/" + uniqueFileName;
                 }
 
                 var doctor = new User

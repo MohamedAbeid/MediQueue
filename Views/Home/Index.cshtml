@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "الصفحة الرئيسية";
     var data = ViewData.Model as Dictionary<string, object>;
     var clinics = data?["Clinics"] as IEnumerable<MediQueue.Models.Clinic> ?? new List<MediQueue.Models.Clinic>();
